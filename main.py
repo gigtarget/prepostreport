@@ -59,32 +59,29 @@ if __name__ == "__main__":
     script = generate_youtube_script_from_report(report_text)
     print("\n🎤 Script Output:\n")
     print(script)
-    send_telegram_message("📝 Script generated:\n" + script[:1000])  # Limit long messages
+    send_telegram_message("📝 Script generated:\n" + script[:1000])  # Trim for Telegram
 
     print("🔊 Generating voice with Polly...")
     generate_audio_with_polly(script)
     send_telegram_message("🎤 Polly voiceover generated.")
     send_telegram_file("output/output_polly.mp3", "🎤 Polly Audio")
 
-    send_telegram_message("✅ Skipped plain market slides — using template-based visuals only.")
-
-    # 🗓️ Overlay current IST date on Pre/Post Date slides
-    print("🗓️ Adding date to Pre and Post templates...")
-    from utils.image_templates import overlay_date_on_template
-
-    pre_path = overlay_date_on_template("Pre Date.jpg", "pre_date_output.jpg", position=(950, 100))
-    post_path = overlay_date_on_template("Post Date.jpg", "post_date_output.jpg", position=(950, 100))
+    # 🗓️ Overlay date on Pre and Post Date templates
+    print("🖼️ Generating Pre and Post Date slides...")
+    pre_path = overlay_date_on_template("Pre Date.jpg", "pre_date_output.jpg", y_position=100, font_size=100)
+    post_path = overlay_date_on_template("Post Date.jpg", "post_date_output.jpg", y_position=100, font_size=100)
 
     if pre_path:
         send_telegram_file(pre_path, "🗓️ Pre Date Slide")
     if post_path:
         send_telegram_file(post_path, "🗓️ Post Date Slide")
 
-    # 🖼️ Thank you slide (sent as-is)
+    # 🙏 Thank you slide
     thank_path = "templates/thank.jpg"
     if os.path.exists(thank_path):
         send_telegram_file(thank_path, "🙏 Thank You Slide")
 
+    # 🎞️ Final video
     print("🎞️ Creating final Shorts video...")
     send_telegram_message("🎞️ Creating final Shorts video...")
     create_video_from_images_and_audio()
