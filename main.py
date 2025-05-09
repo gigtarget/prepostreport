@@ -15,7 +15,6 @@ with open(LOCK_FILE, "w") as f:
 from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
 from utils.script_generator import generate_youtube_script_from_report
 from utils.audio_generator import generate_audio_with_polly
-from utils.image_creator import create_market_slide
 from utils.image_templates import overlay_date_on_template
 from utils.video_creator import create_video_from_images_and_audio
 from utils.telegram_alert import send_telegram_message, send_telegram_file
@@ -67,20 +66,7 @@ if __name__ == "__main__":
     send_telegram_message("🎤 Polly voiceover generated.")
     send_telegram_file("output/output_polly.mp3", "🎤 Polly Audio")
 
-    print("🖼️ Generating market index slides...")
-    if "Unavailable" not in nifty:
-        create_market_slide("📈 NIFTY 50", nifty.split(":")[1].strip(), "nifty_slide")
-        send_telegram_file("output/nifty_slide.png", "📈 NIFTY 50 Slide")
-
-    if "Unavailable" not in sensex:
-        create_market_slide("📊 SENSEX", sensex.split(":")[1].strip(), "sensex_slide")
-        send_telegram_file("output/sensex_slide.png", "📊 SENSEX Slide")
-
-    if "Unavailable" not in banknifty:
-        create_market_slide("🏦 BANK NIFTY", banknifty.split(":")[1].strip(), "banknifty_slide")
-        send_telegram_file("output/banknifty_slide.png", "🏦 BANK NIFTY Slide")
-
-    send_telegram_message("🖼️ All index slides generated using Pillow.")
+    send_telegram_message("✅ Skipped plain market slides — using template-based visuals only.")
 
     # 🗓️ Overlay current IST date on Pre/Post Date slides
     print("🗓️ Adding date to Pre and Post templates...")
