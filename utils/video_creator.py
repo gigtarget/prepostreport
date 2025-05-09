@@ -8,9 +8,10 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4", im
 
     # Step 1: Collect and sort image files
     image_files = sorted(glob("output/*.png"))
-    if not image_files:
-        print("❌ No images found to create video.")
+    if not os.path.exists("output/output_polly.mp3"):
+        print("❌ Polly audio not found.")
         return
+
 
     # Step 2: Resize and convert images to same format if needed
     for i, image_path in enumerate(image_files):
