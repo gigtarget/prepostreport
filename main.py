@@ -2,6 +2,15 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+# 🔐 Prevent re-runs using a simple lock file
+LOCK_FILE = "output/.lock"
+if os.path.exists(LOCK_FILE):
+    print("🛑 Script already ran once. Skipping to prevent extra API usage.")
+    exit()
+os.makedirs("output", exist_ok=True)
+with open(LOCK_FILE, "w") as f:
+    f.write("locked")
+
 from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
 from utils.script_generator import generate_youtube_script_from_report
 from utils.audio_generator import generate_audio_with_polly
@@ -61,11 +70,11 @@ if __name__ == "__main__":
     if "Unavailable" not in banknifty:
         create_market_slide("🏦 BANK NIFTY", banknifty.split(":")[1].strip(), "banknifty_slide")
 
-    # --- Optional DALL·E image from top news ---
+    # --- DALL·E image from top news ---
     if news_articles:
         print("🧠 Generating DALL·E visual for top news...")
         top_title = news_articles[0]['title']
-        ddalle_prompt = f"An illustration of Indian stock market traders analyzing charts. Modern, clean financial scene."
+        dalle_prompt = f"A cinematic, digital-style illustration of: {top_title}. Indian financial market theme."
         generate_dalle_image_from_prompt(dalle_prompt, "news_slide_1")
 
     print("🎞️ Creating final Shorts video...")
