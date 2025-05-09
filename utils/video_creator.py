@@ -8,28 +8,35 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4", im
 
     # Step 1: Collect and sort image files
     image_files = sorted(glob("output/*.png"))
-    if not os.path.exists("output/output_polly.mp3"):
-        print("❌ Polly audio not found.")
+    if not image_files:
+        print("❌ No images found to create video.")
         return
 
-
-    # Step 2: Resize and convert images to same format if needed
+    # Step 2: Resize and save images consistently
     for i, image_path in enumerate(image_files):
         img = Image.open(image_path)
         rgb_img = img.convert('RGB')
-        resized_img = rgb_img.resize((1280, 720))  # Ensure all frames are same size
-        save_path = f"output/frame_{i:03d}.jpg"
-        resized_img.save(save_path)
+        resized_img = rgb_img.resize((1280, 720))
+        frame_path = f"output/frame_{i:03d}.jpg"
+        resized_img.save(frame_path)
 
-    # Step 3: Use ffmpeg-python to generate video from frames and audio
+    # Step 3: Check if audio exists
+    audio_path = "output/output_polly.mp3"
+    if not os.path.exists(audio_path):
+        print("❌ Polly audio not found.")
+        return
+
+    # Step 4: FFmpeg - Combine images and audio
     try:
+        video_input = ffmpeg.input('output/frame_%03d.jpg', framerate=1 / image_duration)
+        audio_input = ffmpeg.input(audio_path)
+
         (
             ffmpeg
-            .input('output/frame_%03d.jpg', framerate=1 / image_duration)
-            .input('output/output_polly.mp3')
-            .output(output_video, vcodec='libx264', acodec='aac', shortest=None, pix_fmt='yuv420p')
+            .output(video_input, audio_input, output_video, vcodec='libx264', acodec='aac', pix_fmt='yuv420p', shortest=None)
             .run(overwrite_output=True)
         )
+
         print(f"✅ Final video saved to: {output_video}")
     except ffmpeg.Error as e:
-        print(f"❌ FFmpeg Error: {e.stderr.decode()}")
+        print(f"❌ FFmpeg failed: {e.stderr.decode()}")
