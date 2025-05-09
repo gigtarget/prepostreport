@@ -3,14 +3,14 @@ from datetime import datetime
 import pytz
 import os
 
-FONT_PATH = "templates/arialbd.ttf"  # Make sure this font exists or use built-in
+FONT_PATH = "templates/arialbd.ttf"  # Ensure this file exists, or fallback to default
 
 def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     now_ist = datetime.now(ist)
     return now_ist.strftime("%d.%m.%Y")
 
-def overlay_date_on_template(template_filename, output_filename, position=(7000, 550), font_size=200):
+def overlay_date_on_template(template_filename, output_filename, y_position=100, font_size=80):
     try:
         img = Image.open(f"templates/{template_filename}").convert("RGB")
         draw = ImageDraw.Draw(img)
@@ -21,7 +21,14 @@ def overlay_date_on_template(template_filename, output_filename, position=(7000,
             font = ImageFont.load_default()
 
         date_text = get_current_date_ist()
-        draw.text(position, date_text, font=font, fill="black")
+
+        # Calculate text width for horizontal centering
+        text_bbox = draw.textbbox((0, 0), date_text, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        image_width = img.width
+        x_center = (image_width - text_width) / 2
+
+        draw.text((x_center, y_position), date_text, font=font, fill="black")
 
         os.makedirs("output", exist_ok=True)
         output_path = f"output/{output_filename}"
