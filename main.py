@@ -9,7 +9,7 @@ from utils.image_creator import create_market_slide
 from utils.dalle_image import generate_dalle_image_from_prompt
 from utils.video_creator import create_video_from_images_and_audio
 
-# ------------------ Generate full report + news ------------------ #
+# ------------------ Generate full report and news ------------------ #
 def generate_full_report():
     report = []
 
@@ -54,17 +54,19 @@ if __name__ == "__main__":
     generate_audio_with_polly(script)
 
     print("🖼️ Generating market index slides...")
-    create_market_slide("📈 NIFTY 50", nifty.split(":")[1].strip(), "nifty_slide")
-    create_market_slide("📊 SENSEX", sensex.split(":")[1].strip(), "sensex_slide")
-    create_market_slide("🏦 BANK NIFTY", banknifty.split(":")[1].strip(), "banknifty_slide")
+    if "Unavailable" not in nifty:
+        create_market_slide("📈 NIFTY 50", nifty.split(":")[1].strip(), "nifty_slide")
+    if "Unavailable" not in sensex:
+        create_market_slide("📊 SENSEX", sensex.split(":")[1].strip(), "sensex_slide")
+    if "Unavailable" not in banknifty:
+        create_market_slide("🏦 BANK NIFTY", banknifty.split(":")[1].strip(), "banknifty_slide")
 
-    # --- DALL·E image from top news ---
+    # --- Optional DALL·E image from top news ---
     if news_articles:
         print("🧠 Generating DALL·E visual for top news...")
         top_title = news_articles[0]['title']
-        dalle_prompt = f"An expressive, cinematic-style visual representation of: {top_title}. Style: financial, Indian, trading scene."
+        dalle_prompt = f"A clean, cinematic digital illustration of: {top_title}. Style: Indian financial market."
         generate_dalle_image_from_prompt(dalle_prompt, "news_slide_1")
 
-    # --- Stitch video together ---
     print("🎞️ Creating final Shorts video...")
     create_video_from_images_and_audio()
