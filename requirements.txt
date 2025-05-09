@@ -6,3 +6,4 @@ Pillow
 python-dotenv
 openai
 lxml_html_clean
+ffmpeg-python
