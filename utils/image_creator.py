@@ -1,8 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 import os
 
-# ✅ You can customize these fonts (optional)
-FONT_PATH_BOLD = "arialbd.ttf"  # or use default system fonts
+FONT_PATH_BOLD = "arialbd.ttf"  # or a fallback to built-in
 FONT_PATH_REGULAR = "arial.ttf"
 
 WIDTH, HEIGHT = 1280, 720
@@ -23,15 +22,16 @@ def create_market_slide(title, value_text, filename):
     title_font = safe_font(FONT_PATH_BOLD, 80)
     value_font = safe_font(FONT_PATH_REGULAR, 64)
 
-    # Title (Centered top)
-    title_width, _ = draw.textsize(title, font=title_font)
-    draw.text(((WIDTH - title_width) / 2, 150), title, fill=TITLE_COLOR, font=title_font)
+    # Use textbbox to get text size (Pillow 8+ compatible)
+    title_bbox = draw.textbbox((0, 0), title, font=title_font)
+    title_width = title_bbox[2] - title_bbox[0]
 
-    # Value/Stat (Centered middle)
-    value_width, _ = draw.textsize(value_text, font=value_font)
+    value_bbox = draw.textbbox((0, 0), value_text, font=value_font)
+    value_width = value_bbox[2] - value_bbox[0]
+
+    draw.text(((WIDTH - title_width) / 2, 150), title, fill=TITLE_COLOR, font=title_font)
     draw.text(((WIDTH - value_width) / 2, 320), value_text, fill=TEXT_COLOR, font=value_font)
 
-    # Save image
     os.makedirs("./output", exist_ok=True)
     img_path = f"./output/{filename}.png"
     img.save(img_path)
