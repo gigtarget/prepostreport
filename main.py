@@ -16,7 +16,6 @@ from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
 from utils.script_generator import generate_youtube_script_from_report
 from utils.audio_generator import generate_audio_with_polly
 from utils.image_creator import create_market_slide
-from utils.dalle_image import generate_dalle_image_from_prompt
 from utils.video_creator import create_video_from_images_and_audio
 from utils.telegram_alert import send_telegram_message, send_telegram_file
 
@@ -45,14 +44,14 @@ def generate_full_report():
         report.append(f"📖 {article['content']}")
         report.append("---")
 
-    return report, nifty, sensex, banknifty, news_articles
+    return report, nifty, sensex, banknifty
 
 # ------------------ MAIN SCRIPT ------------------ #
 if __name__ == "__main__":
     send_telegram_message("🔄 Fetching market data and news...")
     print("🔄 Fetching market data and news...")
 
-    report_list, nifty, sensex, banknifty, news_articles = generate_full_report()
+    report_list, nifty, sensex, banknifty = generate_full_report()
     report_text = "\n".join(report_list)
     send_telegram_message("📊 Market report generated. Creating script...")
 
@@ -60,7 +59,7 @@ if __name__ == "__main__":
     script = generate_youtube_script_from_report(report_text)
     print("\n🎤 Script Output:\n")
     print(script)
-    send_telegram_message("📝 Script generated:\n" + script[:1000])  # Limit long messages
+    send_telegram_message("📝 Script generated:\n" + script[:1000])  # Trim for Telegram
 
     print("🔊 Generating voice with Polly...")
     generate_audio_with_polly(script)
@@ -80,19 +79,7 @@ if __name__ == "__main__":
         create_market_slide("🏦 BANK NIFTY", banknifty.split(":")[1].strip(), "banknifty_slide")
         send_telegram_file("output/banknifty_slide.png", "🏦 BANK NIFTY Slide")
 
-    send_telegram_message("🖼️ Index slides created.")
-
-    # --- Optional DALL·E news image ---
-    if news_articles:
-        print("🧠 Generating DALL·E visual for top news...")
-        top_title = news_articles[0]['title']
-        dalle_prompt = f"A cinematic, digital-style illustration of: {top_title}. Indian financial market theme."
-        try:
-            generate_dalle_image_from_prompt(dalle_prompt, "news_slide_1")
-            send_telegram_file("output/news_slide_1.png", "🎨 DALL·E image of top news")
-            send_telegram_message("🎨 DALL·E image created.")
-        except:
-            send_telegram_message("❌ Failed to generate DALL·E image.")
+    send_telegram_message("🖼️ All index slides generated using Pillow.")
 
     print("🎞️ Creating final Shorts video...")
     send_telegram_message("🎞️ Creating final Shorts video...")
