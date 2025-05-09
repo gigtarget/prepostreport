@@ -7,6 +7,7 @@ from utils.script_generator import generate_youtube_script_from_report
 from utils.audio_generator import generate_audio_with_polly
 from utils.image_creator import create_market_slide
 from utils.dalle_image import generate_dalle_image_from_prompt
+from utils.video_creator import create_video_from_images_and_audio
 
 # ------------------ Generate full report + news ------------------ #
 def generate_full_report():
@@ -57,9 +58,13 @@ if __name__ == "__main__":
     create_market_slide("📊 SENSEX", sensex.split(":")[1].strip(), "sensex_slide")
     create_market_slide("🏦 BANK NIFTY", banknifty.split(":")[1].strip(), "banknifty_slide")
 
-    # --- DALL·E image from top 1 news ---
+    # --- DALL·E image from top news ---
     if news_articles:
         print("🧠 Generating DALL·E visual for top news...")
         top_title = news_articles[0]['title']
         dalle_prompt = f"An expressive, cinematic-style visual representation of: {top_title}. Style: financial, Indian, trading scene."
         generate_dalle_image_from_prompt(dalle_prompt, "news_slide_1")
+
+    # --- Stitch video together ---
+    print("🎞️ Creating final Shorts video...")
+    create_video_from_images_and_audio()
