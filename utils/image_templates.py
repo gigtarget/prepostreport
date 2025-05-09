@@ -3,14 +3,22 @@ from datetime import datetime
 import pytz
 import os
 
-FONT_PATH = "templates/arialbd.ttf"  # Ensure this file exists, or fallback to default
+FONT_PATH = "templates/arialbd.ttf"  # Change path if needed
 
 def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     now_ist = datetime.now(ist)
     return now_ist.strftime("%d.%m.%Y")
 
-def overlay_date_on_template(template_filename, output_filename, y_position=100, font_size=80):
+def overlay_date_on_template(
+    template_filename,
+    output_filename,
+    y_position=100,
+    font_size=80,
+    text_color="black",
+    center=True,
+    custom_position=None
+):
     try:
         img = Image.open(f"templates/{template_filename}").convert("RGB")
         draw = ImageDraw.Draw(img)
@@ -22,13 +30,18 @@ def overlay_date_on_template(template_filename, output_filename, y_position=100,
 
         date_text = get_current_date_ist()
 
-        # Calculate text width for horizontal centering
-        text_bbox = draw.textbbox((0, 0), date_text, font=font)
-        text_width = text_bbox[2] - text_bbox[0]
-        image_width = img.width
-        x_center = (image_width - text_width) / 2
+        if custom_position:
+            position = custom_position
+        elif center:
+            text_bbox = draw.textbbox((0, 0), date_text, font=font)
+            text_width = text_bbox[2] - text_bbox[0]
+            image_width = img.width
+            x_center = (image_width - text_width) / 2
+            position = (x_center, y_position)
+        else:
+            position = (50, y_position)
 
-        draw.text((x_center, y_position), date_text, font=font, fill="black")
+        draw.text(position, date_text, font=font, fill=text_color)
 
         os.makedirs("output", exist_ok=True)
         output_path = f"output/{output_filename}"
