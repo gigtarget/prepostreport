@@ -68,8 +68,21 @@ if __name__ == "__main__":
 
     # 🗓️ Overlay date on Pre and Post Date templates
     print("🖼️ Generating Pre and Post Date slides...")
-    pre_path = overlay_date_on_template("Pre Date.jpg", "pre_date_output.jpg", y_position=100, font_size=100)
-    post_path = overlay_date_on_template("Post Date.jpg", "post_date_output.jpg", y_position=100, font_size=100)
+    pre_path = overlay_date_on_template(
+    "Pre Date.jpg",
+    "pre_date_output.jpg",
+    y_position=700,
+    font_size=520,
+    text_color="black"
+    )
+
+    post_path = overlay_date_on_template(
+    "Post Date.jpg",
+    "post_date_output.jpg",
+    y_position=900,
+    font_size=720,
+    text_color="black"
+    )
 
     if pre_path:
         send_telegram_file(pre_path, "🗓️ Pre Date Slide")
