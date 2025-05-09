@@ -65,7 +65,7 @@ if __name__ == "__main__":
     if news_articles:
         print("🧠 Generating DALL·E visual for top news...")
         top_title = news_articles[0]['title']
-        dalle_prompt = f"A clean, cinematic digital illustration of: {top_title}. Style: Indian financial market."
+        ddalle_prompt = f"An illustration of Indian stock market traders analyzing charts. Modern, clean financial scene."
         generate_dalle_image_from_prompt(dalle_prompt, "news_slide_1")
 
     print("🎞️ Creating final Shorts video...")
