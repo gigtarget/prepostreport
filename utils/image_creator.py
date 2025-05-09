@@ -4,7 +4,7 @@ import os
 FONT_PATH_BOLD = "arialbd.ttf"  # or a fallback to built-in
 FONT_PATH_REGULAR = "arial.ttf"
 
-WIDTH, HEIGHT = 1280, 720
+WIDTH, HEIGHT = 720, 1280
 BG_COLOR = "#ffffff"
 TEXT_COLOR = "#111111"
 TITLE_COLOR = "#2b9348"
