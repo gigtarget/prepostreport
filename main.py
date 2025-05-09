@@ -2,23 +2,25 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-# 🔐 Prevent re-runs using a simple lock file
+# 🔐 Prevent repeated execution
 LOCK_FILE = "output/.lock"
 if os.path.exists(LOCK_FILE):
-    print("🛑 Script already ran once. Skipping to prevent extra API usage.")
+    print("🛑 Script already ran. Skipping to save API usage.")
     exit()
 os.makedirs("output", exist_ok=True)
 with open(LOCK_FILE, "w") as f:
     f.write("locked")
 
+# ✅ Imports
 from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
 from utils.script_generator import generate_youtube_script_from_report
 from utils.audio_generator import generate_audio_with_polly
 from utils.image_creator import create_market_slide
 from utils.dalle_image import generate_dalle_image_from_prompt
 from utils.video_creator import create_video_from_images_and_audio
+from utils.telegram_alert import send_telegram_message
 
-# ------------------ Generate full report and news ------------------ #
+# ------------------ REPORT GENERATION ------------------ #
 def generate_full_report():
     report = []
 
@@ -26,7 +28,6 @@ def generate_full_report():
     nifty = get_yahoo_price_with_change("^NSEI", "NIFTY 50")
     sensex = get_yahoo_price_with_change("^BSESN", "SENSEX")
     banknifty = get_yahoo_price_with_change("^NSEBANK", "BANK NIFTY")
-
     report += [nifty, sensex, banknifty]
 
     report.append("\n🌍 Global Markets:")
@@ -38,7 +39,6 @@ def generate_full_report():
 
     report.append("\n📰 Top Market News:")
     news_articles = get_et_market_articles()
-
     for article in news_articles:
         report.append(f"\n📰 {article['title']}")
         report.append(f"📅 {article['published']}")
@@ -47,20 +47,24 @@ def generate_full_report():
 
     return report, nifty, sensex, banknifty, news_articles
 
-# ------------------ MAIN ------------------ #
+# ------------------ MAIN SCRIPT ------------------ #
 if __name__ == "__main__":
+    send_telegram_message("🔄 Fetching market data and news...")
     print("🔄 Fetching market data and news...")
+
     report_list, nifty, sensex, banknifty, news_articles = generate_full_report()
     report_text = "\n".join(report_list)
+    send_telegram_message("📊 Market report generated. Creating script...")
 
     print("🧠 Generating Shorts script...")
     script = generate_youtube_script_from_report(report_text)
-
     print("\n🎤 Script Output:\n")
     print(script)
+    send_telegram_message("📝 Script generated:\n" + script[:1000])  # Limit long messages
 
     print("🔊 Generating voice with Polly...")
     generate_audio_with_polly(script)
+    send_telegram_message("🎤 Polly voiceover generated.")
 
     print("🖼️ Generating market index slides...")
     if "Unavailable" not in nifty:
@@ -69,13 +73,20 @@ if __name__ == "__main__":
         create_market_slide("📊 SENSEX", sensex.split(":")[1].strip(), "sensex_slide")
     if "Unavailable" not in banknifty:
         create_market_slide("🏦 BANK NIFTY", banknifty.split(":")[1].strip(), "banknifty_slide")
+    send_telegram_message("🖼️ Index slides created (NIFTY/SENSEX/BANK NIFTY).")
 
-    # --- DALL·E image from top news ---
+    # --- Optional DALL·E news image ---
     if news_articles:
         print("🧠 Generating DALL·E visual for top news...")
         top_title = news_articles[0]['title']
-        dalle_prompt = f"A cinematic, digital-style illustration of: {top_title}. Indian financial market theme."
-        generate_dalle_image_from_prompt(dalle_prompt, "news_slide_1")
+        dalle_prompt = f"A clean, cinematic-style digital illustration of: {top_title}. Indian financial market theme."
+        try:
+            generate_dalle_image_from_prompt(dalle_prompt, "news_slide_1")
+            send_telegram_message("🎨 DALL·E image created for top news.")
+        except:
+            send_telegram_message("❌ Failed to generate DALL·E image.")
 
     print("🎞️ Creating final Shorts video...")
+    send_telegram_message("🎞️ Creating final Shorts video...")
     create_video_from_images_and_audio()
+    send_telegram_message("✅ Final Shorts video saved to `/output/final_video.mp4` 🎉")
