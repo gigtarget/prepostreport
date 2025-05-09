@@ -10,7 +10,7 @@ def get_current_date_ist():
     now_ist = datetime.now(ist)
     return now_ist.strftime("%d.%m.%Y")
 
-def overlay_date_on_template(template_filename, output_filename, position=(1000, 50), font_size=80):
+def overlay_date_on_template(template_filename, output_filename, position=(7000, 550), font_size=200):
     try:
         img = Image.open(f"templates/{template_filename}").convert("RGB")
         draw = ImageDraw.Draw(img)
