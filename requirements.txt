@@ -5,3 +5,4 @@ boto3
 Pillow
 python-dotenv
 openai
+lxml_html_clean
