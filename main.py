@@ -1,13 +1,14 @@
 import os
-from dotenv import load_dotenv  # Only for local use
+from dotenv import load_dotenv
 load_dotenv()
 
 from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
 from utils.script_generator import generate_youtube_script_from_report
 from utils.audio_generator import generate_audio_with_polly
 from utils.image_creator import create_market_slide
+from utils.dalle_image import generate_dalle_image_from_prompt
 
-# ------------------ Generate full report text ------------------ #
+# ------------------ Generate full report + news ------------------ #
 def generate_full_report():
     report = []
 
@@ -26,30 +27,39 @@ def generate_full_report():
     report.append(get_yahoo_price_with_change("^N225", "Nikkei 225"))
 
     report.append("\n📰 Top Market News:")
-    for article in get_et_market_articles():
+    news_articles = get_et_market_articles()
+
+    for article in news_articles:
         report.append(f"\n📰 {article['title']}")
         report.append(f"📅 {article['published']}")
         report.append(f"📖 {article['content']}")
         report.append("---")
 
-    return report, nifty, sensex, banknifty
+    return report, nifty, sensex, banknifty, news_articles
 
 # ------------------ MAIN ------------------ #
 if __name__ == "__main__":
-    print("🔄 Fetching market data...")
-    full_report_list, nifty, sensex, banknifty = generate_full_report()
-    full_report_text = "\n".join(full_report_list)
+    print("🔄 Fetching market data and news...")
+    report_list, nifty, sensex, banknifty, news_articles = generate_full_report()
+    report_text = "\n".join(report_list)
 
-    print("🧠 Generating YouTube Shorts Script...")
-    script = generate_youtube_script_from_report(full_report_text)
+    print("🧠 Generating Shorts script...")
+    script = generate_youtube_script_from_report(report_text)
 
-    print("\n🎤 Script:\n")
+    print("\n🎤 Script Output:\n")
     print(script)
 
-    print("\n🔊 Generating Audio...")
+    print("🔊 Generating voice with Polly...")
     generate_audio_with_polly(script)
 
-    print("\n🖼️ Generating Slides...")
+    print("🖼️ Generating market index slides...")
     create_market_slide("📈 NIFTY 50", nifty.split(":")[1].strip(), "nifty_slide")
     create_market_slide("📊 SENSEX", sensex.split(":")[1].strip(), "sensex_slide")
     create_market_slide("🏦 BANK NIFTY", banknifty.split(":")[1].strip(), "banknifty_slide")
+
+    # --- DALL·E image from top 1 news ---
+    if news_articles:
+        print("🧠 Generating DALL·E visual for top news...")
+        top_title = news_articles[0]['title']
+        dalle_prompt = f"An expressive, cinematic-style visual representation of: {top_title}. Style: financial, Indian, trading scene."
+        generate_dalle_image_from_prompt(dalle_prompt, "news_slide_1")
