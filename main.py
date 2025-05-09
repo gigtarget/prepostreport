@@ -16,6 +16,7 @@ from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
 from utils.script_generator import generate_youtube_script_from_report
 from utils.audio_generator import generate_audio_with_polly
 from utils.image_creator import create_market_slide
+from utils.image_templates import overlay_date_on_template
 from utils.video_creator import create_video_from_images_and_audio
 from utils.telegram_alert import send_telegram_message, send_telegram_file
 
@@ -59,7 +60,7 @@ if __name__ == "__main__":
     script = generate_youtube_script_from_report(report_text)
     print("\n🎤 Script Output:\n")
     print(script)
-    send_telegram_message("📝 Script generated:\n" + script[:1000])  # Trim for Telegram
+    send_telegram_message("📝 Script generated:\n" + script[:1000])  # Limit long messages
 
     print("🔊 Generating voice with Polly...")
     generate_audio_with_polly(script)
@@ -80,6 +81,23 @@ if __name__ == "__main__":
         send_telegram_file("output/banknifty_slide.png", "🏦 BANK NIFTY Slide")
 
     send_telegram_message("🖼️ All index slides generated using Pillow.")
+
+    # 🗓️ Overlay current IST date on Pre/Post Date slides
+    print("🗓️ Adding date to Pre and Post templates...")
+    from utils.image_templates import overlay_date_on_template
+
+    pre_path = overlay_date_on_template("Pre Date.jpg", "pre_date_output.jpg", position=(950, 100))
+    post_path = overlay_date_on_template("Post Date.jpg", "post_date_output.jpg", position=(950, 100))
+
+    if pre_path:
+        send_telegram_file(pre_path, "🗓️ Pre Date Slide")
+    if post_path:
+        send_telegram_file(post_path, "🗓️ Post Date Slide")
+
+    # 🖼️ Thank you slide (sent as-is)
+    thank_path = "templates/thank.jpg"
+    if os.path.exists(thank_path):
+        send_telegram_file(thank_path, "🙏 Thank You Slide")
 
     print("🎞️ Creating final Shorts video...")
     send_telegram_message("🎞️ Creating final Shorts video...")
