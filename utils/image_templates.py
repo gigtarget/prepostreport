@@ -3,7 +3,7 @@ from datetime import datetime
 import pytz
 import os
 
-FONT_PATH = "templates/arialbd.ttf"  # Update if your font is elsewhere
+FONT_PATH = "templates/arialbd.ttf"  # You can change the font if needed
 
 def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
@@ -11,8 +11,8 @@ def get_current_date_ist():
     return now_ist.strftime("%d.%m.%Y")
 
 def overlay_date_on_template(
-    template_path,        # now expects full relative path like "templates/Pre Date.jpg"
-    output_path,          # expects full output path like "output/preview_image.jpg"
+    template_path,
+    output_path,
     y_position=100,
     font_size=80,
     text_color="black",
@@ -23,6 +23,7 @@ def overlay_date_on_template(
         img = Image.open(template_path).convert("RGB")
         draw = ImageDraw.Draw(img)
 
+        # Load font with fallback
         try:
             font = ImageFont.truetype(FONT_PATH, font_size)
         except:
@@ -30,6 +31,7 @@ def overlay_date_on_template(
 
         date_text = get_current_date_ist()
 
+        # Determine position
         if custom_position:
             position = custom_position
         elif center:
@@ -41,6 +43,7 @@ def overlay_date_on_template(
         else:
             position = (50, y_position)
 
+        # Draw text
         draw.text(position, date_text, font=font, fill=text_color)
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
