@@ -59,9 +59,9 @@ if __name__ == "__main__":
     overlay_date_on_template(
         template_path="templates/Pre Date.jpg",
         output_path="output/preview_image.jpg",
-        font_size=180,
+        font_size=160,
         x_position=110,
-        y_position=1000,
+        y_position=1100,
         text_color="black",
         center=False
     )
