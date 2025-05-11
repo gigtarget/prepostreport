@@ -14,7 +14,7 @@ def overlay_date_on_template(
     template_path,
     output_path,
     y_position=100,
-    font_size=80,
+    font_size=180,
     text_color="black",
     center=True,
     custom_position=None
