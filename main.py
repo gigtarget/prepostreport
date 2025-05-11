@@ -1,8 +1,9 @@
 import os
+import time
 from dotenv import load_dotenv
 load_dotenv()
 
-# 🔐 Prevent repeated execution
+# 🔐 Prevent repeated execution unless unlocked manually
 LOCK_FILE = "output/.lock"
 if os.path.exists(LOCK_FILE):
     print("🛑 Script already ran. Skipping to save API usage.")
@@ -13,10 +14,7 @@ with open(LOCK_FILE, "w") as f:
 
 # ✅ Imports
 from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
-from utils.script_generator import generate_youtube_script_from_report
-from utils.audio_generator import generate_audio_with_polly
 from utils.image_templates import overlay_date_on_template
-from utils.video_creator import create_video_from_images_and_audio
 from utils.telegram_alert import send_telegram_message, send_telegram_file
 
 # ------------------ REPORT GENERATION ------------------ #
@@ -44,63 +42,23 @@ def generate_full_report():
         report.append(f"📖 {article['content']}")
         report.append("---")
 
-    return report, nifty, sensex, banknifty
+    return report
 
-# ------------------ MAIN SCRIPT ------------------ #
+# ------------------ MAIN EXECUTION ------------------ #
 if __name__ == "__main__":
-    send_telegram_message("🔄 Fetching market data and news...")
-    print("🔄 Fetching market data and news...")
+    send_telegram_message("🔄 Phase 1: Fetching market data and news...")
+    report = generate_full_report()
 
-    report_list, nifty, sensex, banknifty = generate_full_report()
-    report_text = "\n".join(report_list)
-    send_telegram_message("📊 Market report generated. Creating script...")
+    # Save the report locally
+    with open("output/report.txt", "w", encoding="utf-8") as f:
+        f.write("\n".join(report))
 
-    print("🧠 Generating Shorts script...")
-    script = generate_youtube_script_from_report(report_text)
-    print("\n🎤 Script Output:\n")
-    print(script)
-    send_telegram_message("📝 Script generated:\n" + script[:1000])  # Trim for Telegram
+    # Send confirmation image using a template
+    overlay_date_on_template("templates/Pre Date.jpg", "output/preview_image.jpg")
+    send_telegram_file("output/preview_image.jpg", "✅ Report and image ready. Reply 'yes' to continue with script, audio, and video generation.")
 
-    print("🔊 Generating voice with Polly...")
-    generate_audio_with_polly(script)
-    send_telegram_message("🎤 Polly voiceover generated.")
-    send_telegram_file("output/output_polly.mp3", "🎤 Polly Audio")
+    # Now wait for approval to continue
+    with open("output/awaiting_approval.flag", "w") as f:
+        f.write("waiting")
 
-    # 🗓️ Overlay date on Pre and Post Date templates
-    print("🖼️ Generating Pre and Post Date slides...")
-    pre_path = overlay_date_on_template(
-    "Pre Date.jpg",
-    "pre_date_output.jpg",
-    y_position=700,
-    font_size=520,
-    text_color="black"
-    )
-
-    post_path = overlay_date_on_template(
-    "Post Date.jpg",
-    "post_date_output.jpg",
-    y_position=900,
-    font_size=720,
-    text_color="black"
-    )
-
-    if pre_path:
-        send_telegram_file(pre_path, "🗓️ Pre Date Slide")
-    if post_path:
-        send_telegram_file(post_path, "🗓️ Post Date Slide")
-
-    # 🙏 Thank you slide
-    thank_path = "templates/thank.jpg"
-    if os.path.exists(thank_path):
-        send_telegram_file(thank_path, "🙏 Thank You Slide")
-
-    # 🎞️ Final video
-    print("🎞️ Creating final Shorts video...")
-    send_telegram_message("🎞️ Creating final Shorts video...")
-    create_video_from_images_and_audio()
-
-    if os.path.exists("output/final_video.mp4"):
-        send_telegram_file("output/final_video.mp4", "✅ Final Shorts Video")
-        send_telegram_message("✅ Final video generation complete!")
-    else:
-        send_telegram_message("❌ Final video creation failed.")
+    print("🟡 Phase 1 complete. Awaiting user approval to continue...")
