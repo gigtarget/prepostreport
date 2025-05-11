@@ -84,7 +84,7 @@ if __name__ == "__main__":
         font_size=60,
         text_color="black",
         start_y=300,
-        line_spacing=90,
+        line_spacing=110,
         start_x=100
     )
     send_telegram_file("output/report_image.jpg", "📊 Market Index Summary")
