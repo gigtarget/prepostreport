@@ -14,7 +14,7 @@ with open(LOCK_FILE, "w") as f:
 
 # ✅ Imports
 from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
-from utils.image_templates import overlay_date_on_template
+from utils.image_templates import overlay_date_on_template, overlay_text_lines_on_template
 from utils.telegram_alert import send_telegram_message, send_telegram_file
 
 # ------------------ REPORT GENERATION ------------------ #
@@ -28,11 +28,14 @@ def generate_full_report():
     report += [nifty, sensex, banknifty]
 
     report.append("\n🌍 Global Markets:")
-    report.append(get_yahoo_price_with_change("^DJI", "Dow Jones"))
-    report.append(get_yahoo_price_with_change("^IXIC", "Nasdaq"))
-    report.append(get_yahoo_price_with_change("^FTSE", "FTSE 100"))
-    report.append(get_yahoo_price_with_change("^GDAXI", "DAX"))
-    report.append(get_yahoo_price_with_change("^N225", "Nikkei 225"))
+    global_indices = [
+        get_yahoo_price_with_change("^DJI", "Dow Jones"),
+        get_yahoo_price_with_change("^IXIC", "Nasdaq"),
+        get_yahoo_price_with_change("^FTSE", "FTSE 100"),
+        get_yahoo_price_with_change("^GDAXI", "DAX"),
+        get_yahoo_price_with_change("^N225", "Nikkei 225")
+    ]
+    report += global_indices
 
     report.append("\n📰 Top Market News:")
     news_articles = get_et_market_articles()
@@ -42,30 +45,51 @@ def generate_full_report():
         report.append(f"📖 {article['content']}")
         report.append("---")
 
-    return report
+    return report, nifty, sensex, banknifty, global_indices
 
 # ------------------ MAIN EXECUTION ------------------ #
 if __name__ == "__main__":
     send_telegram_message("🔄 Phase 1: Fetching market data and news...")
-    report = generate_full_report()
+    report, nifty, sensex, banknifty, global_indices = generate_full_report()
 
-    # Save the report locally
     with open("output/report.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(report))
 
-    # ✅ Custom text styling for image
+    # ✅ Image 1: Date overlay on Pre Date template
     overlay_date_on_template(
         template_path="templates/Pre Date.jpg",
         output_path="output/preview_image.jpg",
         font_size=180,
-        x_position=120,        # ✅ NEW: control horizontal offset
-        y_position=1000,        # ✅ control vertical offset
+        x_position=120,
+        y_position=1000,
         text_color="black",
-        center=False 
+        center=False
     )
+    send_telegram_file("output/preview_image.jpg", "✅ Pre-Market Report Date")
 
-    send_telegram_file("output/preview_image.jpg", "✅ Report and image ready. Reply 'yes' to continue with script, audio, and video generation.")
+    # ✅ Image 2: Full index data overlay on report.jpg
+    index_lines = [
+        "📊 Indian Indices",
+        nifty,
+        sensex,
+        banknifty,
+        "",
+        "🌍 Global Indices"
+    ] + global_indices
 
+    overlay_text_lines_on_template(
+        template_path="templates/report.jpg",
+        output_path="output/report_image.jpg",
+        text_lines=index_lines,
+        font_size=60,
+        text_color="black",
+        start_y=300,
+        line_spacing=85,
+        start_x=100
+    )
+    send_telegram_file("output/report_image.jpg", "📊 Market Index Summary")
+
+    # Await user approval
     with open("output/awaiting_approval.flag", "w") as f:
         f.write("waiting")
 
