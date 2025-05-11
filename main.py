@@ -58,8 +58,8 @@ if __name__ == "__main__":
         template_path="templates/Pre Date.jpg",
         output_path="output/preview_image.jpg",
         font_size=180,
-        x_position=150,        # ✅ NEW: control horizontal offset
-        y_position=900,        # ✅ control vertical offset
+        x_position=130,        # ✅ NEW: control horizontal offset
+        y_position=1000,        # ✅ control vertical offset
         text_color="black",
         center=False 
     )
