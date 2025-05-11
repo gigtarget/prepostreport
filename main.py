@@ -102,3 +102,4 @@ if __name__ == "__main__":
         f.write("waiting")
 
     print("✅ All 3 report images generated and sent. Awaiting approval...")
+
