@@ -91,10 +91,10 @@ if __name__ == "__main__":
         news_lines=news_lines,
         font_size=48,
         text_color="black",
-        start_y=200,
+        start_y=320,
         line_spacing=70,
         start_x=100,
-        wrap_width=85
+        wrap_width=60
     )
     send_telegram_file("output/news_image.jpg", "📰 Top Market Headlines")
 
