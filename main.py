@@ -57,7 +57,7 @@ if __name__ == "__main__":
     overlay_date_on_template(
         "templates/Pre Date.jpg",              # Template path
         "output/preview_image.jpg",            # Output path
-        font_size=110,                         # Bigger font
+        font_size=710,                         # Bigger font
         y_position=150,                        # Lower placement
         text_color="white"                     # White text (adjust as needed)
     )
