@@ -3,14 +3,14 @@ from datetime import datetime
 import pytz
 import os
 
-FONT_PATH = "fonts/Agrandir.ttf"  # Use your custom font
+FONT_PATH = "fonts/Playfair.ttf"  # Ensure this matches your uploaded font
 
 def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     now_ist = datetime.now(ist)
     return now_ist.strftime("%d.%m.%Y")
 
-# ✅ Function 1: For date only
+# 🟡 1. For Pre-Date image (date only)
 def overlay_date_on_template(
     template_path,
     output_path,
@@ -56,7 +56,7 @@ def overlay_date_on_template(
         print(f"❌ Error processing template {template_path}: {e}")
         return None
 
-# ✅ Function 2: For index data text lines
+# 🟢 2. For Index Summary Image with red/green change coloring
 def overlay_text_lines_on_template(
     template_path,
     output_path,
@@ -80,6 +80,25 @@ def overlay_text_lines_on_template(
         y = start_y
         for line in text_lines:
             draw.text((start_x, y), line, font=font, fill=text_color)
+
+            # Attempt to color just the final change value
+            try:
+                parts = line.strip().rsplit(" ", 1)
+                if len(parts) == 2:
+                    text_before, change = parts
+                    x_offset = draw.textlength(text_before + " ", font=font)
+
+                    if change.startswith("-"):
+                        change_color = "red"
+                    elif change.startswith("+") or change.isdigit():
+                        change_color = "green"
+                    else:
+                        change_color = text_color
+
+                    draw.text((start_x + x_offset, y), change, font=font, fill=change_color)
+            except Exception as e:
+                print(f"⚠️ Failed to color change part: {e}")
+
             y += line_spacing
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
