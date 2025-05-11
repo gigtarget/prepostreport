@@ -55,7 +55,7 @@ if __name__ == "__main__":
     with open("output/report.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(report))
 
-    # ✅ Image 1: Pre Date
+    # ✅ Image 1: Pre-market date image
     overlay_date_on_template(
         template_path="templates/Pre Date.jpg",
         output_path="output/preview_image.jpg",
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     )
     send_telegram_file("output/preview_image.jpg", "✅ Pre-Market Report Date")
 
-    # ✅ Image 2: Index Summary
+    # ✅ Image 2: Market Index Summary
     index_lines = [" ", nifty, sensex, banknifty, "", " "] + global_indices
 
     overlay_text_lines_on_template(
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     )
     send_telegram_file("output/report_image.jpg", "📊 Market Index Summary")
 
-    # ✅ Image 3: News Headlines
+    # ✅ Image 3: News Headlines Image
     news_lines = [article["title"] for article in news_articles[:5]]
 
     overlay_news_on_template(
@@ -91,10 +91,10 @@ if __name__ == "__main__":
         news_lines=news_lines,
         font_size=48,
         text_color="black",
-        start_y=320,
+        start_y=320,           # Leave space for title
         line_spacing=70,
         start_x=100,
-        wrap_width=60
+        max_width_ratio=0.85
     )
     send_telegram_file("output/news_image.jpg", "📰 Top Market Headlines")
 
