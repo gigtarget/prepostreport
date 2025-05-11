@@ -3,7 +3,7 @@ from datetime import datetime
 import pytz
 import os
 
-FONT_PATH = "fonts/Playfair.ttf"  # Ensure this matches your uploaded font
+FONT_PATH = "fonts/Agrandir.ttf"  # Ensure this matches your uploaded font
 
 def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
