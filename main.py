@@ -53,11 +53,13 @@ if __name__ == "__main__":
     with open("output/report.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(report))
 
-    # Send confirmation image using a template
-    overlay_date_on_template("Pre Date.jpg", "output/preview_image.jpg")
+    # ✅ Fix path here
+    overlay_date_on_template("templates/Pre Date.jpg", "output/preview_image.jpg")
+
+    # Send confirmation image to Telegram
     send_telegram_file("output/preview_image.jpg", "✅ Report and image ready. Reply 'yes' to continue with script, audio, and video generation.")
 
-    # Now wait for approval to continue
+    # Create flag file
     with open("output/awaiting_approval.flag", "w") as f:
         f.write("waiting")
 
