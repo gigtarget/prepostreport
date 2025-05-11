@@ -69,12 +69,12 @@ if __name__ == "__main__":
 
     # ✅ Image 2: Full index data overlay on report.jpg
     index_lines = [
-        "📊 Indian Indices",
+        " ",
         nifty,
         sensex,
         banknifty,
         "",
-        "🌍 Global Indices"
+        " "
     ] + global_indices
 
     overlay_text_lines_on_template(
