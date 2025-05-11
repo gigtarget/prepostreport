@@ -3,7 +3,7 @@ from datetime import datetime
 import pytz
 import os
 
-# ✅ Point to your uploaded font
+# Use your uploaded Playfair font
 FONT_PATH = "fonts/Playfair.ttf"
 
 def get_current_date_ist():
@@ -14,6 +14,7 @@ def get_current_date_ist():
 def overlay_date_on_template(
     template_path,
     output_path,
+    x_position=None,         # ✅ New: override horizontal placement
     y_position=100,
     font_size=80,
     text_color="black",
@@ -39,10 +40,11 @@ def overlay_date_on_template(
             text_bbox = draw.textbbox((0, 0), date_text, font=font)
             text_width = text_bbox[2] - text_bbox[0]
             image_width = img.width
-            x_center = (image_width - text_width) / 2
-            position = (x_center, y_position)
+            x = (image_width - text_width) / 2
+            position = (x, y_position)
         else:
-            position = (50, y_position)
+            x = x_position if x_position is not None else 50
+            position = (x, y_position)
 
         draw.text(position, date_text, font=font, fill=text_color)
 
