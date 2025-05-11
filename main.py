@@ -54,7 +54,7 @@ if __name__ == "__main__":
         f.write("\n".join(report))
 
     # Send confirmation image using a template
-    overlay_date_on_template("templates/Pre Date.jpg", "output/preview_image.jpg")
+    overlay_date_on_template("Pre Date.jpg", "output/preview_image.jpg")
     send_telegram_file("output/preview_image.jpg", "✅ Report and image ready. Reply 'yes' to continue with script, audio, and video generation.")
 
     # Now wait for approval to continue
