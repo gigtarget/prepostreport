@@ -2,16 +2,16 @@ from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 import pytz
 import os
+from textwrap import wrap
 
-# ✅ Font setup
-FONT_PATH = "fonts/Agrandir.ttf"
+FONT_PATH = "fonts/Agrandir.ttf"  # ✅ Your selected font
 
 def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     now_ist = datetime.now(ist)
     return now_ist.strftime("%d.%m.%Y")
 
-# 🟡 1. Overlay date on Pre Date image
+# 🟡 1. Pre-Date image
 def overlay_date_on_template(
     template_path,
     output_path,
@@ -57,7 +57,7 @@ def overlay_date_on_template(
         print(f"❌ Error processing template {template_path}: {e}")
         return None
 
-# 🟢 2. Overlay index summary with green/red point change
+# 🟢 2. Market Index Summary with change coloring
 def overlay_text_lines_on_template(
     template_path,
     output_path,
@@ -75,14 +75,13 @@ def overlay_text_lines_on_template(
         try:
             font = ImageFont.truetype(FONT_PATH, font_size)
         except Exception as e:
-            print(f"⚠️ Font load error: {e} — using default")
+            print(f"⚠️ Font load error: {e}")
             font = ImageFont.load_default()
 
         y = start_y
         for line in text_lines:
             draw.text((start_x, y), line, font=font, fill=text_color)
 
-            # Highlight final value if change detected
             try:
                 parts = line.strip().rsplit(" ", 1)
                 if len(parts) == 2:
@@ -111,7 +110,7 @@ def overlay_text_lines_on_template(
         print(f"❌ Error creating index report image: {e}")
         return None
 
-# 🔵 3. Overlay news headlines (wrapped)
+# 🔵 3. Auto-scaling News Headlines
 def overlay_news_on_template(
     template_path,
     output_path,
@@ -126,25 +125,37 @@ def overlay_news_on_template(
     try:
         img = Image.open(template_path).convert("RGB")
         draw = ImageDraw.Draw(img)
+        img_width, img_height = img.size
 
-        try:
-            font = ImageFont.truetype(FONT_PATH, font_size)
-        except Exception as e:
-            print(f"⚠️ Font load error: {e}")
-            font = ImageFont.load_default()
+        def calculate_total_height(font_obj):
+            y = start_y
+            for headline in news_lines:
+                wrapped = wrap(headline, width=wrap_width)
+                y += len(wrapped) * line_spacing + 20
+            return y
 
-        from textwrap import wrap
+        while font_size > 20:
+            try:
+                font = ImageFont.truetype(FONT_PATH, font_size)
+            except:
+                font = ImageFont.load_default()
+
+            required_height = calculate_total_height(font)
+            if required_height < img_height - 50:
+                break
+            font_size -= 2
+
         y = start_y
         for headline in news_lines:
             wrapped_lines = wrap(headline, width=wrap_width)
             for line in wrapped_lines:
                 draw.text((start_x, y), line, font=font, fill=text_color)
                 y += line_spacing
-            y += 20  # space between headlines
+            y += 20
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         img.save(output_path)
-        print(f"✅ News image saved: {output_path}")
+        print(f"✅ News image saved with adjusted font size {font_size}: {output_path}")
         return output_path
 
     except Exception as e:
