@@ -3,7 +3,7 @@ from datetime import datetime
 import pytz
 import os
 
-FONT_PATH = "templates/arialbd.ttf"  # Make sure this font exists
+FONT_PATH = "templates/arialbd.ttf"  # Update if your font is elsewhere
 
 def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
@@ -11,8 +11,8 @@ def get_current_date_ist():
     return now_ist.strftime("%d.%m.%Y")
 
 def overlay_date_on_template(
-    template_path,
-    output_filename,
+    template_path,        # now expects full relative path like "templates/Pre Date.jpg"
+    output_path,          # expects full output path like "output/preview_image.jpg"
     y_position=100,
     font_size=80,
     text_color="black",
@@ -43,10 +43,10 @@ def overlay_date_on_template(
 
         draw.text(position, date_text, font=font, fill=text_color)
 
-        os.makedirs("output", exist_ok=True)
-        img.save(output_filename)
-        print(f"✅ Image saved: {output_filename}")
-        return output_filename
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        img.save(output_path)
+        print(f"✅ Image saved: {output_path}")
+        return output_path
 
     except Exception as e:
         print(f"❌ Error processing template {template_path}: {e}")
