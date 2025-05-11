@@ -58,7 +58,7 @@ if __name__ == "__main__":
         template_path="templates/Pre Date.jpg",
         output_path="output/preview_image.jpg",
         font_size=180,
-        y_position=150,
+        y_position=350,
         text_color="black"  # Make all changes here
     )
 
