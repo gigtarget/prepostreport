@@ -4,14 +4,14 @@ import pytz
 import os
 from textwrap import wrap
 
-FONT_PATH = "fonts/Agrandir.ttf"  # ✅ Your selected font
+FONT_PATH = "fonts/Agrandir.ttf"  # 🔤 Your chosen font
 
 def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     now_ist = datetime.now(ist)
     return now_ist.strftime("%d.%m.%Y")
 
-# 🟡 1. Pre-Date image
+# 1️⃣ Pre-market date overlay
 def overlay_date_on_template(
     template_path,
     output_path,
@@ -25,12 +25,7 @@ def overlay_date_on_template(
     try:
         img = Image.open(template_path).convert("RGB")
         draw = ImageDraw.Draw(img)
-
-        try:
-            font = ImageFont.truetype(FONT_PATH, font_size)
-        except Exception as e:
-            print(f"⚠️ Font load error: {e} — using default")
-            font = ImageFont.load_default()
+        font = ImageFont.truetype(FONT_PATH, font_size)
 
         date_text = get_current_date_ist()
 
@@ -38,13 +33,10 @@ def overlay_date_on_template(
             position = custom_position
         elif center:
             text_bbox = draw.textbbox((0, 0), date_text, font=font)
-            text_width = text_bbox[2] - text_bbox[0]
-            image_width = img.width
-            x_center = (image_width - text_width) / 2
+            x_center = (img.width - (text_bbox[2] - text_bbox[0])) / 2
             position = (x_center, y_position)
         else:
-            x = x_position if x_position is not None else 50
-            position = (x, y_position)
+            position = (x_position or 50, y_position)
 
         draw.text(position, date_text, font=font, fill=text_color)
 
@@ -57,7 +49,7 @@ def overlay_date_on_template(
         print(f"❌ Error processing template {template_path}: {e}")
         return None
 
-# 🟢 2. Market Index Summary with change coloring
+# 2️⃣ Index Summary with green/red point coloring
 def overlay_text_lines_on_template(
     template_path,
     output_path,
@@ -71,91 +63,90 @@ def overlay_text_lines_on_template(
     try:
         img = Image.open(template_path).convert("RGB")
         draw = ImageDraw.Draw(img)
-
-        try:
-            font = ImageFont.truetype(FONT_PATH, font_size)
-        except Exception as e:
-            print(f"⚠️ Font load error: {e}")
-            font = ImageFont.load_default()
+        font = ImageFont.truetype(FONT_PATH, font_size)
 
         y = start_y
         for line in text_lines:
             draw.text((start_x, y), line, font=font, fill=text_color)
-
             try:
                 parts = line.strip().rsplit(" ", 1)
                 if len(parts) == 2:
-                    text_before, change = parts
-                    x_offset = draw.textlength(text_before + " ", font=font)
+                    label, change = parts
+                    x_offset = draw.textlength(label + " ", font=font)
 
                     if change.startswith("-"):
-                        change_color = "red"
+                        draw.text((start_x + x_offset, y), change, font=font, fill="red")
                     elif change.startswith("+") or change.isdigit():
-                        change_color = "green"
-                    else:
-                        change_color = text_color
-
-                    draw.text((start_x + x_offset, y), change, font=font, fill=change_color)
-            except Exception as e:
-                print(f"⚠️ Failed to color change part: {e}")
-
+                        draw.text((start_x + x_offset, y), change, font=font, fill="green")
+            except:
+                pass
             y += line_spacing
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         img.save(output_path)
-        print(f"✅ Index data image saved: {output_path}")
+        print(f"✅ Index image saved: {output_path}")
         return output_path
 
     except Exception as e:
         print(f"❌ Error creating index report image: {e}")
         return None
 
-# 🔵 3. Auto-scaling News Headlines
+# 3️⃣ Auto-scaled and wrapped News Headlines
 def overlay_news_on_template(
     template_path,
     output_path,
     news_lines,
     font_size=48,
     text_color="black",
-    start_y=200,
+    start_y=320,
     line_spacing=70,
     start_x=80,
-    wrap_width=90
+    max_width_ratio=0.85
 ):
     try:
         img = Image.open(template_path).convert("RGB")
         draw = ImageDraw.Draw(img)
         img_width, img_height = img.size
+        max_width = img_width * max_width_ratio
 
-        def calculate_total_height(font_obj):
-            y = start_y
+        def wrap_text(text, font_obj):
+            words = text.split()
+            lines = []
+            current_line = ""
+            for word in words:
+                test_line = current_line + word + " "
+                if draw.textlength(test_line, font=font_obj) <= max_width:
+                    current_line = test_line
+                else:
+                    lines.append(current_line.strip())
+                    current_line = word + " "
+            if current_line:
+                lines.append(current_line.strip())
+            return lines
+
+        def get_wrapped_lines(font_obj):
+            lines = []
             for headline in news_lines:
-                wrapped = wrap(headline, width=wrap_width)
-                y += len(wrapped) * line_spacing + 20
-            return y
+                lines += wrap_text(headline, font_obj)
+                lines.append("")
+            return lines
 
         while font_size > 20:
-            try:
-                font = ImageFont.truetype(FONT_PATH, font_size)
-            except:
-                font = ImageFont.load_default()
-
-            required_height = calculate_total_height(font)
-            if required_height < img_height - 50:
+            font = ImageFont.truetype(FONT_PATH, font_size)
+            total_height = len(get_wrapped_lines(font)) * line_spacing
+            if total_height < img_height - start_y - 50:
                 break
             font_size -= 2
 
+        font = ImageFont.truetype(FONT_PATH, font_size)
         y = start_y
-        for headline in news_lines:
-            wrapped_lines = wrap(headline, width=wrap_width)
-            for line in wrapped_lines:
-                draw.text((start_x, y), line, font=font, fill=text_color)
-                y += line_spacing
-            y += 20
+        for line in get_wrapped_lines(font):
+            draw.text((start_x, y), line, font=font, fill=text_color)
+            y += line_spacing
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         img.save(output_path)
-        print(f"✅ News image saved with adjusted font size {font_size}: {output_path}")
+        print(f"✅ News image saved (font size: {font_size}): {output_path}")
         return output_path
 
     except Exception as e:
