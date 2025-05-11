@@ -58,8 +58,10 @@ if __name__ == "__main__":
         template_path="templates/Pre Date.jpg",
         output_path="output/preview_image.jpg",
         font_size=180,
-        y_position=1150,
-        text_color="black"  # Make all changes here
+        x_position=300,        # ✅ NEW: control horizontal offset
+        y_position=1000,        # ✅ control vertical offset
+        text_color="black",
+        center=False 
     )
 
     send_telegram_file("output/preview_image.jpg", "✅ Report and image ready. Reply 'yes' to continue with script, audio, and video generation.")
