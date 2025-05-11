@@ -83,7 +83,7 @@ if __name__ == "__main__":
         text_lines=index_lines,
         font_size=60,
         text_color="black",
-        start_y=300,
+        start_y=260,
         line_spacing=110,
         start_x=100
     )
