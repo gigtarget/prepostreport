@@ -3,7 +3,8 @@ from datetime import datetime
 import pytz
 import os
 
-FONT_PATH = "templates/arialbd.ttf"  # Use your preferred font here
+# ✅ Point to your uploaded font
+FONT_PATH = "fonts/Playfair.ttf"
 
 def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
@@ -14,7 +15,7 @@ def overlay_date_on_template(
     template_path,
     output_path,
     y_position=100,
-    font_size=180,
+    font_size=80,
     text_color="black",
     center=True,
     custom_position=None
@@ -25,8 +26,9 @@ def overlay_date_on_template(
 
         try:
             font = ImageFont.truetype(FONT_PATH, font_size)
+            print(f"✅ Loaded custom font: {FONT_PATH}")
         except Exception as e:
-            print(f"⚠️ Font load error: {e}")
+            print(f"⚠️ Font load error: {e} — using default")
             font = ImageFont.load_default()
 
         date_text = get_current_date_ist()
