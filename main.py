@@ -53,19 +53,17 @@ if __name__ == "__main__":
     with open("output/report.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(report))
 
-    # ✅ Create styled image (font size, y-position, color)
+    # ✅ Custom text styling for image
     overlay_date_on_template(
-        "templates/Pre Date.jpg",              # Template path
-        "output/preview_image.jpg",            # Output path
-        font_size=710,                         # Bigger font
-        y_position=150,                        # Lower placement
-        text_color="white"                     # White text (adjust as needed)
+        template_path="templates/Pre Date.jpg",
+        output_path="output/preview_image.jpg",
+        font_size=110,
+        y_position=150,
+        text_color="black"  # Make all changes here
     )
 
-    # Send confirmation image to Telegram
     send_telegram_file("output/preview_image.jpg", "✅ Report and image ready. Reply 'yes' to continue with script, audio, and video generation.")
 
-    # Create flag file for approval detection
     with open("output/awaiting_approval.flag", "w") as f:
         f.write("waiting")
 
