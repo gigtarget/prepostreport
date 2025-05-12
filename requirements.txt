@@ -8,3 +8,11 @@ openai
 lxml_html_clean
 ffmpeg-python
 pytz
+requests
+python-dotenv
+Pillow
+moviepy
+boto3
+openai
+beautifulsoup4
+feedparser
