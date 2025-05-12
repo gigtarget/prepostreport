@@ -81,20 +81,20 @@ def main():
 
     report = generate_full_report()
 
-    # Limit summary to 20 lines max
-    summary_lines = report[:20]
+    # ✅ Sanitize and limit summary lines
+    summary_lines = [str(line) for line in report[:20] if isinstance(line, str) and line.strip()]
 
-    # Extract only valid news strings
+    # ✅ Extract only valid news strings
     news_items = get_et_market_articles()
     news_lines = [item["title"] if isinstance(item, dict) and "title" in item else str(item) for item in news_items]
-    news_lines = news_lines[:10]  # limit news
+    news_lines = news_lines[:10]
 
-    # Generate images with safe args
+    # ✅ Generate images
     date_img = overlay_date_on_template("templates/Pre Date.jpg", "output/date.png")
     summary_img = overlay_text_lines_on_template("templates/report.jpg", "output/summary.png", summary_lines)
     news_img = overlay_news_on_template("templates/news.jpg", "output/news.png", news_lines)
 
-    # Only send if successfully created
+    # ✅ Only send if successful
     if date_img:
         send_telegram_file(date_img, "🗓️ Date Image")
     if summary_img:
