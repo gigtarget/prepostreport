@@ -28,7 +28,7 @@ def get_yahoo_price_with_change(symbol, label):
 
         return f"{label}: {current_price} {arrow} {sign}{change}"
 
-    except Exception as e:
+    except Exception:
         return f"{label}: Unavailable"
 
 # ------------------ NEWS FETCH ------------------ #
@@ -37,7 +37,17 @@ def get_et_market_articles():
     feed = feedparser.parse(rss_url)
     top_articles = []
 
-    for entry in feed.entries[:5]:
+    # ❌ Forbidden keywords that suggest stock tips or recommendations
+    forbidden_phrases = [
+        "stocks to buy", "stocks to watch", "these stocks", "top stocks",
+        "multibagger", "hot stocks", "must buy", "recommend", "price target", "tip"
+    ]
+
+    for entry in feed.entries:
+        title_lower = entry.title.lower()
+        if any(phrase in title_lower for phrase in forbidden_phrases):
+            continue  # ❌ Skip risky investment articles
+
         try:
             article = Article(entry.link)
             article.download()
@@ -55,12 +65,15 @@ def get_et_market_articles():
                 "content": cleaned_text[:600] + "..."
             })
 
-        except Exception as e:
-            # Fallback
+        except Exception:
+            # Fallback to summary if parsing fails
             top_articles.append({
                 "title": entry.title,
                 "published": entry.published,
                 "content": (entry.get("summary") or "Content unavailable")[:300] + "..."
             })
+
+        if len(top_articles) >= 5:
+            break  # ✅ Limit to first 5 safe articles
 
     return top_articles
