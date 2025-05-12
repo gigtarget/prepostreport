@@ -81,14 +81,26 @@ def main():
 
     report = generate_full_report()
 
-    # Generate and send images with correct paths
-    date_img = overlay_date_on_template("templates/Pre Date.jpg", "output/date.png")
-    summary_img = overlay_text_lines_on_template("templates/report.jpg", "output/summary.png", report)
-    news_img = overlay_news_on_template("templates/news.jpg", "output/news.png", report)
+    # Limit summary to 20 lines max
+    summary_lines = report[:20]
 
-    send_telegram_file(date_img, "🗓️ Date Image")
-    send_telegram_file(summary_img, "📈 Market Summary")
-    send_telegram_file(news_img, "📰 News Summary")
+    # Extract only valid news strings
+    news_items = get_et_market_articles()
+    news_lines = [item["title"] if isinstance(item, dict) and "title" in item else str(item) for item in news_items]
+    news_lines = news_lines[:10]  # limit news
+
+    # Generate images with safe args
+    date_img = overlay_date_on_template("templates/Pre Date.jpg", "output/date.png")
+    summary_img = overlay_text_lines_on_template("templates/report.jpg", "output/summary.png", summary_lines)
+    news_img = overlay_news_on_template("templates/news.jpg", "output/news.png", news_lines)
+
+    # Only send if successfully created
+    if date_img:
+        send_telegram_file(date_img, "🗓️ Date Image")
+    if summary_img:
+        send_telegram_file(summary_img, "📈 Market Summary")
+    if news_img:
+        send_telegram_file(news_img, "📰 News Summary")
 
     if not wait_for_telegram_reply("🕹️ Proceed to generate script? Reply 'yes'"):
         return
