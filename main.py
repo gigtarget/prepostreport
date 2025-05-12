@@ -131,14 +131,22 @@ def main():
     # AUDIO STEP
     while True:
         audio_path = generate_audio(script_text)
-        send_telegram_file(audio_path, "🎤 Audio Generated")
+        if audio_path and os.path.exists(audio_path):
+            send_telegram_file(audio_path, "🎤 Audio Generated")
+        else:
+            send_telegram_message("❌ Audio generation failed. Retrying...")
+
         if wait_for_telegram_reply("▶️ Proceed to generate video? Reply 'yes' to continue or 'no' to regenerate audio."):
             break
 
     # VIDEO STEP
     while True:
         video_path = generate_video()
-        send_telegram_file(video_path, "✅ Final Video")
+        if video_path and os.path.exists(video_path):
+            send_telegram_file(video_path, "✅ Final Video")
+        else:
+            send_telegram_message("❌ Video generation failed. Retrying...")
+
         if wait_for_telegram_reply("🎬 Happy with this video? Reply 'yes' to finish or 'no' to regenerate video."):
             break
 
