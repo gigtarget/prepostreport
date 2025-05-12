@@ -95,20 +95,15 @@ def main():
 
     report = generate_full_report()
 
-    # ✅ Sanitize and limit summary lines
     summary_lines = [str(line) for line in report[:20] if isinstance(line, str) and line.strip()]
-
-    # ✅ Extract only valid news strings
     news_items = get_et_market_articles()
     news_lines = [item["title"] if isinstance(item, dict) and "title" in item else str(item) for item in news_items]
     news_lines = news_lines[:10]
 
-    # ✅ Generate images
     date_img = overlay_date_on_template("templates/Pre Date.jpg", "output/date.png")
     summary_img = overlay_text_lines_on_template("templates/report.jpg", "output/summary.png", summary_lines)
     news_img = overlay_news_on_template("templates/news.jpg", "output/news.png", news_lines)
 
-    # ✅ Only send if successful
     if date_img:
         send_telegram_file(date_img, "🗓️ Date Image")
     if summary_img:
@@ -116,26 +111,23 @@ def main():
     if news_img:
         send_telegram_file(news_img, "📰 News Summary")
 
-    # 🔁 SCRIPT GENERATION LOOP
-    while True:
-        script_text = generate_script_from_report(report)
-        send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
-        if wait_for_telegram_reply("🕹️ Proceed to generate audio? Reply 'yes' to continue or 'no' to regenerate script."):
-            break
+    # SCRIPT STEP
+    while not wait_for_telegram_reply("🕹️ Proceed to generate script? Reply 'yes' to continue or 'no' to ask again."):
+        continue
+    script_text = generate_script_from_report(report)
+    send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
 
-    # 🔁 AUDIO GENERATION LOOP
-    while True:
-        audio_path = generate_audio(script_text)
-        send_telegram_file(audio_path, "🎤 Audio Generated")
-        if wait_for_telegram_reply("▶️ Proceed to generate video? Reply 'yes' to continue or 'no' to regenerate audio."):
-            break
+    # AUDIO STEP
+    while not wait_for_telegram_reply("▶️ Proceed to generate audio? Reply 'yes' to continue or 'no' to ask again."):
+        continue
+    audio_path = generate_audio(script_text)
+    send_telegram_file(audio_path, "🎤 Audio Generated")
 
-    # 🔁 VIDEO GENERATION LOOP
-    while True:
-        video_path = generate_video()
-        send_telegram_file(video_path, "✅ Final Video")
-        if wait_for_telegram_reply("🎬 Happy with this video? Reply 'yes' to finish or 'no' to regenerate video."):
-            break
+    # VIDEO STEP
+    while not wait_for_telegram_reply("🎬 Proceed to generate video? Reply 'yes' to continue or 'no' to ask again."):
+        continue
+    video_path = generate_video()
+    send_telegram_file(video_path, "✅ Final Video")
 
 if __name__ == "__main__":
     main()
