@@ -11,7 +11,7 @@ from utils.image_templates import (
 )
 from utils.script_generator import generate_youtube_script_from_report as generate_script_from_report
 from utils.audio_generator import generate_audio_with_polly as generate_audio
-from utils.video_creator import generate_video
+from utils.video_creator import create_video_from_images_and_audio as generate_video
 from utils.telegram_alert import send_telegram_message, send_telegram_file
 
 # Load environment variables
@@ -105,7 +105,7 @@ def main():
     if not wait_for_telegram_reply("🎬 Proceed to generate video? Reply 'yes'"):
         return
 
-    video_path = generate_video(script_path, audio_path)
+    video_path = generate_video()
     send_telegram_file(video_path, "✅ Final Video")
 
 if __name__ == "__main__":
