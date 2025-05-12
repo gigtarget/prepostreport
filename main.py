@@ -26,6 +26,8 @@ def wait_for_telegram_reply(prompt_text=None):
     if prompt_text:
         send_telegram_message(prompt_text)
 
+    os.makedirs("output", exist_ok=True)  # ✅ Ensure output dir exists
+
     last_update_id = None
     try:
         res = requests.get(GET_UPDATES_URL)
@@ -34,11 +36,20 @@ def wait_for_telegram_reply(prompt_text=None):
             last_update_id = data["result"][-1]["update_id"]
             with open(OFFSET_FILE, "w") as f:
                 f.write(str(last_update_id))
+        else:
+            with open(OFFSET_FILE, "w") as f:
+                f.write("0")
     except Exception as e:
         send_telegram_message(f"⚠️ Error clearing old replies: {e}")
+        with open(OFFSET_FILE, "w") as f:
+            f.write("0")
 
     while True:
         try:
+            if not os.path.exists(OFFSET_FILE):
+                with open(OFFSET_FILE, "w") as f:
+                    f.write("0")
+
             with open(OFFSET_FILE, "r") as f:
                 last_update_id = f.read().strip()
 
