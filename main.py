@@ -10,7 +10,7 @@ from utils.image_templates import (
     overlay_news_on_template
 )
 from utils.script_generator import generate_youtube_script_from_report as generate_script_from_report
-from utils.audio_generator import generate_audio
+from utils.audio_generator import generate_audio_with_polly as generate_audio
 from utils.video_creator import generate_video
 from utils.telegram_alert import send_telegram_message, send_telegram_file
 
