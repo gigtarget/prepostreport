@@ -15,9 +15,9 @@ def get_current_date_ist():
 def overlay_date_on_template(
     template_path,
     output_path,
-    x_position=None,
-    y_position=100,
-    font_size=80,
+    x_position=110,
+    y_position=1100,
+    font_size=160,
     text_color="black",
     center=True,
     custom_position=None
@@ -56,8 +56,8 @@ def overlay_text_lines_on_template(
     text_lines,
     font_size=60,
     text_color="black",
-    start_y=200,
-    line_spacing=80,
+    start_y=260,
+    line_spacing=110,
     start_x=100
 ):
     try:
