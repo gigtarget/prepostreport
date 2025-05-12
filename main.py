@@ -22,10 +22,10 @@ GET_UPDATES_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates"
 OFFSET_FILE = "output/last_update.txt"
 LOCK_FILE = "output/.lock"
 
-def wait_for_telegram_reply(prompt_text="Reply 'yes' to continue"):
-    send_telegram_message(prompt_text)
+def wait_for_telegram_reply(prompt_text=None):
+    if prompt_text:
+        send_telegram_message(prompt_text)
 
-    # 🚫 Step 1: Read and discard old messages
     last_update_id = None
     try:
         res = requests.get(GET_UPDATES_URL)
@@ -37,7 +37,6 @@ def wait_for_telegram_reply(prompt_text="Reply 'yes' to continue"):
     except Exception as e:
         send_telegram_message(f"⚠️ Error clearing old replies: {e}")
 
-    # ✅ Step 2: Wait for new replies after that
     while True:
         try:
             with open(OFFSET_FILE, "r") as f:
@@ -54,10 +53,13 @@ def wait_for_telegram_reply(prompt_text="Reply 'yes' to continue"):
                 message_text = result["message"]["text"].strip().lower()
                 with open(OFFSET_FILE, "w") as f:
                     f.write(str(last_update_id))
+
                 if message_text == "yes":
                     return True
+                elif message_text == "no":
+                    return False
                 else:
-                    send_telegram_message("❌ Not approved. Waiting for 'yes'...")
+                    send_telegram_message("❌ Invalid reply. Type 'yes' or 'no'.")
             time.sleep(5)
         except Exception as e:
             send_telegram_message(f"⚠️ Error waiting for reply: {e}")
@@ -114,23 +116,26 @@ def main():
     if news_img:
         send_telegram_file(news_img, "📰 News Summary")
 
-    if not wait_for_telegram_reply("🕹️ Proceed to generate script? Reply 'yes'"):
-        return
+    # 🔁 SCRIPT GENERATION LOOP
+    while True:
+        script_text = generate_script_from_report(report)
+        send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
+        if wait_for_telegram_reply("🕹️ Proceed to generate audio? Reply 'yes' to continue or 'no' to regenerate script."):
+            break
 
-    script_text = generate_script_from_report(report)
-    send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
+    # 🔁 AUDIO GENERATION LOOP
+    while True:
+        audio_path = generate_audio(script_text)
+        send_telegram_file(audio_path, "🎤 Audio Generated")
+        if wait_for_telegram_reply("▶️ Proceed to generate video? Reply 'yes' to continue or 'no' to regenerate audio."):
+            break
 
-    if not wait_for_telegram_reply("▶️ Proceed to generate audio? Reply 'yes'"):
-        return
-
-    audio_path = generate_audio(script_text)
-    send_telegram_file(audio_path, "🎤 Audio Generated")
-
-    if not wait_for_telegram_reply("🎬 Proceed to generate video? Reply 'yes'"):
-        return
-
-    video_path = generate_video()
-    send_telegram_file(video_path, "✅ Final Video")
+    # 🔁 VIDEO GENERATION LOOP
+    while True:
+        video_path = generate_video()
+        send_telegram_file(video_path, "✅ Final Video")
+        if wait_for_telegram_reply("🎬 Happy with this video? Reply 'yes' to finish or 'no' to regenerate video."):
+            break
 
 if __name__ == "__main__":
     main()
