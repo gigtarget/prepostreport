@@ -24,13 +24,25 @@ LOCK_FILE = "output/.lock"
 
 def wait_for_telegram_reply(prompt_text="Reply 'yes' to continue"):
     send_telegram_message(prompt_text)
-    last_update_id = None
-    if os.path.exists(OFFSET_FILE):
-        with open(OFFSET_FILE, "r") as f:
-            last_update_id = f.read().strip()
 
+    # 🚫 Step 1: Read and discard old messages
+    last_update_id = None
+    try:
+        res = requests.get(GET_UPDATES_URL)
+        data = res.json()
+        if data.get("result"):
+            last_update_id = data["result"][-1]["update_id"]
+            with open(OFFSET_FILE, "w") as f:
+                f.write(str(last_update_id))
+    except Exception as e:
+        send_telegram_message(f"⚠️ Error clearing old replies: {e}")
+
+    # ✅ Step 2: Wait for new replies after that
     while True:
         try:
+            with open(OFFSET_FILE, "r") as f:
+                last_update_id = f.read().strip()
+
             params = {"timeout": 30}
             if last_update_id:
                 params["offset"] = int(last_update_id) + 1
@@ -105,7 +117,7 @@ def main():
     if not wait_for_telegram_reply("🕹️ Proceed to generate script? Reply 'yes'"):
         return
 
-    script_path, script_text = generate_script_from_report(report)
+    script_text = generate_script_from_report(report)
     send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
 
     if not wait_for_telegram_reply("▶️ Proceed to generate audio? Reply 'yes'"):
