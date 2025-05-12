@@ -26,7 +26,7 @@ def wait_for_telegram_reply(prompt_text=None):
     if prompt_text:
         send_telegram_message(prompt_text)
 
-    os.makedirs("output", exist_ok=True)  # ✅ Ensure output dir exists
+    os.makedirs("output", exist_ok=True)
 
     last_update_id = None
     try:
@@ -39,8 +39,7 @@ def wait_for_telegram_reply(prompt_text=None):
         else:
             with open(OFFSET_FILE, "w") as f:
                 f.write("0")
-    except Exception as e:
-        send_telegram_message(f"⚠️ Error clearing old replies: {e}")
+    except Exception:
         with open(OFFSET_FILE, "w") as f:
             f.write("0")
 
@@ -123,22 +122,25 @@ def main():
         send_telegram_file(news_img, "📰 News Summary")
 
     # SCRIPT STEP
-    while not wait_for_telegram_reply("🕹️ Proceed to generate script? Reply 'yes' to continue or 'no' to ask again."):
-        continue
-    script_text = generate_script_from_report(report)
-    send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
+    while True:
+        script_text = generate_script_from_report(report)
+        send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
+        if wait_for_telegram_reply("🤖 Proceed to generate audio? Reply 'yes' to continue or 'no' to regenerate script."):
+            break
 
     # AUDIO STEP
-    while not wait_for_telegram_reply("▶️ Proceed to generate audio? Reply 'yes' to continue or 'no' to ask again."):
-        continue
-    audio_path = generate_audio(script_text)
-    send_telegram_file(audio_path, "🎤 Audio Generated")
+    while True:
+        audio_path = generate_audio(script_text)
+        send_telegram_file(audio_path, "🎤 Audio Generated")
+        if wait_for_telegram_reply("▶️ Proceed to generate video? Reply 'yes' to continue or 'no' to regenerate audio."):
+            break
 
     # VIDEO STEP
-    while not wait_for_telegram_reply("🎬 Proceed to generate video? Reply 'yes' to continue or 'no' to ask again."):
-        continue
-    video_path = generate_video()
-    send_telegram_file(video_path, "✅ Final Video")
+    while True:
+        video_path = generate_video()
+        send_telegram_file(video_path, "✅ Final Video")
+        if wait_for_telegram_reply("🎬 Happy with this video? Reply 'yes' to finish or 'no' to regenerate video."):
+            break
 
 if __name__ == "__main__":
     main()
