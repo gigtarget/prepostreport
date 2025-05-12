@@ -81,10 +81,10 @@ def main():
 
     report = generate_full_report()
 
-    # Generate and send images
-    date_img = overlay_date_on_template()
-    summary_img = overlay_text_lines_on_template(report)
-    news_img = overlay_news_on_template(report)
+    # Generate and send images with correct paths
+    date_img = overlay_date_on_template("templates/Pre Date.jpg", "output/date.png")
+    summary_img = overlay_text_lines_on_template("templates/report.jpg", "output/summary.png", report)
+    news_img = overlay_news_on_template("templates/news.jpg", "output/news.png", report)
 
     send_telegram_file(date_img, "🗓️ Date Image")
     send_telegram_file(summary_img, "📈 Market Summary")
