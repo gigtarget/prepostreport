@@ -19,7 +19,7 @@ Write a short, clear, human-sounding YouTube Shorts script that:
 - Avoids overloading with too many numbers.
 - Uses simple, conversational Hinglish, use words like up, down, percentage,  
 
-The tone should feel helpful and energetic, like you're helping a fellow trader quickly prep for their day. The script should be in Hinglish — words which are related to stock market you can generate in english, rest all script mostly in  Hinglish with a little English, keep all numbers in english don't use any strong hindi word which will be difficult to understand use english word in that case, like a real Indian trader talking. No narrator notes, just the word-by-word script.
+The tone should feel helpful and energetic, like you're helping a fellow trader quickly prep for their day. The script should be in Hinglish — mostly english but to make viewer comfortable we can use few hindi words to help and relate with script better , keep all numbers in english don't use any strong hindi word which will be difficult to understand use english word in that case, like a real Indian trader talking. No narrator notes, just the word-by-word script.
 
 Respond with only the final script.
 """
