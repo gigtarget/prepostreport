@@ -39,8 +39,8 @@ def get_et_market_articles():
 
     # ❌ Forbidden keywords that suggest stock tips or recommendations
     forbidden_phrases = [
-        "stocks to buy", "stocks to watch", "these", "top",
-        "multibagger", "hot stocks", "must buy", "recommend", "price target", "stocks",  "tip"
+        "stocks to buy", "stocks to watch", "these", "top", "who", "why",
+        "multibagger", "hot stocks", "must buy", "recommend", "price target", "talk", "predict", "what", "why", "smart", "stocks",  "tip"
     ]
 
     for entry in feed.entries:
