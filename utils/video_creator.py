@@ -1,28 +1,26 @@
 import os
 import ffmpeg
 from PIL import Image
-from ffmpeg import Error
-from subprocess import run, PIPE
-
 
 def get_audio_duration(path):
     try:
         probe = ffmpeg.probe(path)
         return float(probe["format"]["duration"])
-    except Error as e:
-        print("❌ Failed to get audio duration:", e)
-        return 15.0  # fallback default
+    except ffmpeg.Error as e:
+        print("❌ Could not retrieve audio duration.")
+        return 15.0  # fallback
 
-
-def convert_and_keep_resolution(image_path, output_path):
-    img = Image.open(image_path).convert("RGB")
-    img.save(output_path)
-
+def save_frame(img_path, save_as):
+    try:
+        img = Image.open(img_path).convert("RGB")
+        img.save(save_as)
+        print(f"🖼️ Saved frame: {save_as}")
+    except Exception as e:
+        print(f"❌ Error saving frame from {img_path}: {e}")
 
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
 
-    # Paths
     audio_path = "output/output_polly.mp3"
     thank_img = "templates/thank.jpg"
 
@@ -33,13 +31,13 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     duration = get_audio_duration(audio_path)
     print(f"🎧 Audio Duration: {duration:.2f} sec")
 
-    # Timings
+    # Frame timing
     date_dur = 1
     summary_dur = 4
     thank_dur = 3
     report_dur = max(duration - (date_dur + summary_dur + thank_dur), 1)
 
-    # Image list and durations
+    # Image-to-duration map
     frames = [
         ("output/date.png", date_dur),
         ("output/summary.png", summary_dur),
@@ -47,15 +45,14 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         (thank_img, thank_dur)
     ]
 
-    # Save as frame_001.jpg, frame_002.jpg, etc.
+    # Generate frames as JPG
     current_frame = 0
-    for path, dur in frames:
-        for _ in range(int(dur)):
+    for img_path, seconds in frames:
+        for _ in range(int(seconds)):
             current_frame += 1
-            output_frame = f"output/frame_{current_frame:03d}.jpg"
-            convert_and_keep_resolution(path, output_frame)
+            save_frame(img_path, f"output/frame_{current_frame:03d}.jpg")
 
-    # FFmpeg stitching
+    # Build video with FFmpeg
     try:
         video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1)
         audio_input = ffmpeg.input(audio_path)
@@ -63,12 +60,14 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         (
             ffmpeg
             .output(video_input, audio_input, output_video,
-                    vcodec="libx264", acodec="aac",
-                    pix_fmt="yuv420p", shortest=None)
+                    vcodec="libx264", acodec="aac", pix_fmt="yuv420p", shortest=None)
             .run(overwrite_output=True)
         )
+
         print(f"✅ Final video saved to: {output_video}")
         return output_video
+
     except ffmpeg.Error as e:
-        print("❌ FFmpeg failed:", e.stderr.decode())
+        err_msg = e.stderr.decode() if e.stderr else str(e)
+        print(f"❌ FFmpeg failed:\n{err_msg}")
         return None
