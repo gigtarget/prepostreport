@@ -1,46 +1,38 @@
 import os
 from glob import glob
-from PIL import Image
-import ffmpeg
+from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
 
 def create_video_from_images_and_audio(output_video="output/final_video.mp4", image_duration=5):
     os.makedirs("output", exist_ok=True)
 
-    # Step 1: Collect and sort image files
+    # Step 1: Collect and sort images
     image_files = sorted(glob("output/*.png"))
     if not image_files:
         print("❌ No images found to create video.")
         return None
 
-    # Step 2: Resize and convert to jpg
-    for i, image_path in enumerate(image_files):
-        img = Image.open(image_path)
-        rgb_img = img.convert("RGB")
-        resized_img = rgb_img.resize((1280, 720))
-        frame_path = f"output/frame_{i:03d}.jpg"
-        resized_img.save(frame_path)
+    # Step 2: Create clips
+    clips = []
+    for image_path in image_files:
+        clip = ImageClip(image_path).set_duration(image_duration).resize((1280, 720))
+        clips.append(clip)
 
-    # Step 3: Ensure audio file exists
+    video = concatenate_videoclips(clips, method="compose")
+
+    # Step 3: Add audio
     audio_path = "output/output_polly.mp3"
-    if not os.path.exists(audio_path):
-        print("❌ Polly audio not found.")
+    if os.path.exists(audio_path):
+        audio = AudioFileClip(audio_path)
+        video = video.set_audio(audio)
+    else:
+        print("❌ Audio file not found.")
         return None
 
-    # Step 4: Create video with ffmpeg
+    # Step 4: Export
     try:
-        video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1 / image_duration)
-        audio_input = ffmpeg.input(audio_path)
-
-        (
-            ffmpeg
-            .output(video_input, audio_input, output_video,
-                    vcodec="libx264", acodec="aac", pix_fmt="yuv420p", shortest=None)
-            .run(overwrite_output=True)
-        )
-
+        video.write_videofile(output_video, fps=24, codec="libx264", audio_codec="aac")
         print(f"✅ Final video saved to: {output_video}")
         return output_video
-
-    except ffmpeg.Error as e:
-        print(f"❌ FFmpeg failed: {e.stderr.decode()}")
+    except Exception as e:
+        print(f"❌ MoviePy failed: {e}")
         return None
