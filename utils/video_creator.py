@@ -12,7 +12,7 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4", im
         print("❌ No images found to create video.")
         return None
 
-    # Step 2: Resize and save images as .jpg
+    # Step 2: Resize and convert to jpg
     for i, image_path in enumerate(image_files):
         img = Image.open(image_path)
         rgb_img = img.convert("RGB")
@@ -20,25 +20,27 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4", im
         frame_path = f"output/frame_{i:03d}.jpg"
         resized_img.save(frame_path)
 
-    # Step 3: Check if audio exists
+    # Step 3: Ensure audio file exists
     audio_path = "output/output_polly.mp3"
     if not os.path.exists(audio_path):
         print("❌ Polly audio not found.")
         return None
 
-    # Step 4: Generate video using ffmpeg
+    # Step 4: Create video with ffmpeg
     try:
+        video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1 / image_duration)
+        audio_input = ffmpeg.input(audio_path)
+
         (
             ffmpeg
-            .input("output/frame_%03d.jpg", framerate=1 / image_duration)
-            .output(audio_path, output_video,
-                    vcodec='libx264', acodec='aac',
-                    pix_fmt='yuv420p',
-                    shortest=None)
+            .output(video_input, audio_input, output_video,
+                    vcodec="libx264", acodec="aac", pix_fmt="yuv420p", shortest=None)
             .run(overwrite_output=True)
         )
+
         print(f"✅ Final video saved to: {output_video}")
         return output_video
+
     except ffmpeg.Error as e:
         print(f"❌ FFmpeg failed: {e.stderr.decode()}")
         return None
