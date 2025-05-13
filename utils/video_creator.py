@@ -1,47 +1,74 @@
 import os
-from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips
-from glob import glob
+import ffmpeg
+from PIL import Image
+from ffmpeg import Error
+from subprocess import run, PIPE
+
+
+def get_audio_duration(path):
+    try:
+        probe = ffmpeg.probe(path)
+        return float(probe["format"]["duration"])
+    except Error as e:
+        print("❌ Failed to get audio duration:", e)
+        return 15.0  # fallback default
+
+
+def convert_and_keep_resolution(image_path, output_path):
+    img = Image.open(image_path).convert("RGB")
+    img.save(output_path)
+
 
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
 
-    # Load audio to get duration
+    # Paths
     audio_path = "output/output_polly.mp3"
-    if not os.path.exists(audio_path):
-        print("❌ Audio not found.")
-        return None
-
-    audio = AudioFileClip(audio_path)
-    total_duration = audio.duration
-
-    # Load images
-    date_img = "output/date.png"
-    summary_img = "output/summary.png"
-    report_img = "output/news.png"  # assuming this is the third one
     thank_img = "templates/thank.jpg"
 
-    # Clip durations
-    date_dur = 2
+    if not os.path.exists(audio_path):
+        print("❌ Audio file not found.")
+        return None
+
+    duration = get_audio_duration(audio_path)
+    print(f"🎧 Audio Duration: {duration:.2f} sec")
+
+    # Timings
+    date_dur = 1
     summary_dur = 4
     thank_dur = 3
-    report_dur = max(total_duration - (date_dur + summary_dur + thank_dur), 1)
+    report_dur = max(duration - (date_dur + summary_dur + thank_dur), 1)
 
-    def make_clip(path, duration):
-        return ImageClip(path).set_duration(duration)
-
-    clips = [
-        make_clip(date_img, date_dur),
-        make_clip(summary_img, summary_dur),
-        make_clip(report_img, report_dur),
-        make_clip(thank_img, thank_dur)
+    # Image list and durations
+    frames = [
+        ("output/date.png", date_dur),
+        ("output/summary.png", summary_dur),
+        ("output/news.png", report_dur),
+        (thank_img, thank_dur)
     ]
 
-    final = concatenate_videoclips(clips, method="compose").set_audio(audio)
+    # Save as frame_001.jpg, frame_002.jpg, etc.
+    current_frame = 0
+    for path, dur in frames:
+        for _ in range(int(dur)):
+            current_frame += 1
+            output_frame = f"output/frame_{current_frame:03d}.jpg"
+            convert_and_keep_resolution(path, output_frame)
 
+    # FFmpeg stitching
     try:
-        final.write_videofile(output_video, fps=24, codec="libx264", audio_codec="aac")
+        video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1)
+        audio_input = ffmpeg.input(audio_path)
+
+        (
+            ffmpeg
+            .output(video_input, audio_input, output_video,
+                    vcodec="libx264", acodec="aac",
+                    pix_fmt="yuv420p", shortest=None)
+            .run(overwrite_output=True)
+        )
         print(f"✅ Final video saved to: {output_video}")
         return output_video
-    except Exception as e:
-        print(f"❌ Failed to export video: {e}")
+    except ffmpeg.Error as e:
+        print("❌ FFmpeg failed:", e.stderr.decode())
         return None
