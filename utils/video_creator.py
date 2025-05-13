@@ -10,7 +10,6 @@ def get_audio_duration(path):
         print("❌ Could not retrieve audio duration.")
         return 15.0  # fallback default
 
-
 def save_frame(img_path, save_as):
     try:
         if not os.path.exists(img_path):
@@ -24,9 +23,13 @@ def save_frame(img_path, save_as):
     except Exception as e:
         print(f"❌ Error saving frame from {img_path}: {e}")
 
-
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
+
+    # 🔁 Clean old frames
+    for f in os.listdir("output"):
+        if f.startswith("frame_") and f.endswith(".jpg"):
+            os.remove(os.path.join("output", f))
 
     audio_path = "output/output_polly.mp3"
     thank_img = "templates/thank.jpg"
@@ -44,7 +47,6 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     thank_dur = 3
     report_dur = max(duration - (date_dur + summary_dur + thank_dur), 1)
 
-    # Frame schedule: (image, duration in seconds)
     frames = [
         ("output/date.png", date_dur),
         ("output/summary.png", summary_dur),
@@ -52,21 +54,30 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         (thank_img, thank_dur)
     ]
 
-    # Generate frames: frame_001.jpg, frame_002.jpg...
+    # Save all frames
     current_frame = 0
     for img_path, seconds in frames:
         for _ in range(int(seconds)):
             current_frame += 1
             save_frame(img_path, f"output/frame_{current_frame:03d}.jpg")
 
-    # 🧾 List all frames for debugging
-    print("\n🧾 Listing all frames before video generation:")
+    # ✅ Frame summary check
+    print("\n🧾 Frame Summary Check:")
+    frame_count = 0
     for f in sorted(os.listdir("output")):
         if f.startswith("frame_") and f.endswith(".jpg"):
-            print(" -", f)
+            path = os.path.join("output", f)
+            try:
+                img = Image.open(path)
+                frame_count += 1
+                print(f"✅ {f}: {img.size} | {os.path.getsize(path)} bytes")
+            except Exception as e:
+                print(f"❌ Failed to read {f}: {e}")
+    print(f"➡️ Total frames detected: {frame_count}")
 
-    # FFmpeg combine
+    # 🚀 Start ffmpeg
     try:
+        print("\n🚀 Starting FFmpeg with pattern: output/frame_%03d.jpg")
         video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1)
         audio_input = ffmpeg.input(audio_path)
 
