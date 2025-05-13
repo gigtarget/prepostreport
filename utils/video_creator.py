@@ -1,6 +1,6 @@
 import os
 from glob import glob
-from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
+import moviepy.editor as mpy  # ✅ Fix import path
 
 def create_video_from_images_and_audio(output_video="output/final_video.mp4", image_duration=5):
     os.makedirs("output", exist_ok=True)
@@ -14,16 +14,16 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4", im
     # Step 2: Create image clips
     clips = []
     for image_path in image_files:
-        clip = ImageClip(image_path).set_duration(image_duration).resize((1280, 720))
+        clip = mpy.ImageClip(image_path).set_duration(image_duration).resize((1280, 720))
         clips.append(clip)
 
     # Step 3: Concatenate video
-    final_clip = concatenate_videoclips(clips, method="compose")
+    final_clip = mpy.concatenate_videoclips(clips, method="compose")
 
     # Step 4: Attach audio
     audio_path = "output/output_polly.mp3"
     if os.path.exists(audio_path):
-        audio = AudioFileClip(audio_path)
+        audio = mpy.AudioFileClip(audio_path)
         final_clip = final_clip.set_audio(audio)
     else:
         print("❌ Audio file not found.")
