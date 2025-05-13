@@ -8,10 +8,4 @@ openai
 lxml_html_clean
 ffmpeg-python
 pytz
-moviepy
-imageio
-imageio-ffmpeg
-numpy
-tqdm
-decorator
 beautifulsoup4
