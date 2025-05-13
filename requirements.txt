@@ -16,3 +16,4 @@ boto3
 openai
 beautifulsoup4
 feedparser
+moviepy
