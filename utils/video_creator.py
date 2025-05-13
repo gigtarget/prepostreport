@@ -8,15 +8,22 @@ def get_audio_duration(path):
         return float(probe["format"]["duration"])
     except ffmpeg.Error as e:
         print("❌ Could not retrieve audio duration.")
-        return 15.0  # fallback
+        return 15.0  # fallback default
+
 
 def save_frame(img_path, save_as):
     try:
+        if not os.path.exists(img_path):
+            print(f"⚠️ Image not found: {img_path}, using fallback (thank.jpg)")
+            img_path = "templates/thank.jpg"
+
         img = Image.open(img_path).convert("RGB")
         img.save(save_as)
-        print(f"🖼️ Saved frame: {save_as}")
+        size = os.path.getsize(save_as)
+        print(f"🖼️ Saved frame: {save_as} | From: {img_path} | Size: {size} bytes")
     except Exception as e:
         print(f"❌ Error saving frame from {img_path}: {e}")
+
 
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
@@ -37,7 +44,7 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     thank_dur = 3
     report_dur = max(duration - (date_dur + summary_dur + thank_dur), 1)
 
-    # Image-to-duration map
+    # Frame schedule: (image, duration in seconds)
     frames = [
         ("output/date.png", date_dur),
         ("output/summary.png", summary_dur),
@@ -45,14 +52,20 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         (thank_img, thank_dur)
     ]
 
-    # Generate frames as JPG
+    # Generate frames: frame_001.jpg, frame_002.jpg...
     current_frame = 0
     for img_path, seconds in frames:
         for _ in range(int(seconds)):
             current_frame += 1
             save_frame(img_path, f"output/frame_{current_frame:03d}.jpg")
 
-    # Build video with FFmpeg
+    # 🧾 List all frames for debugging
+    print("\n🧾 Listing all frames before video generation:")
+    for f in sorted(os.listdir("output")):
+        if f.startswith("frame_") and f.endswith(".jpg"):
+            print(" -", f)
+
+    # FFmpeg combine
     try:
         video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1)
         audio_input = ffmpeg.input(audio_path)
