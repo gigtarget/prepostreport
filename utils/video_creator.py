@@ -1,5 +1,4 @@
 import os
-from glob import glob
 from PIL import Image
 import ffmpeg
 from pydub.utils import mediainfo
@@ -7,22 +6,19 @@ from pydub.utils import mediainfo
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
 
-    # Input files
     date_img = "output/date.png"
     summary_img = "output/summary.png"
     news_img = "output/news.png"
     thank_img = "templates/thank.jpg"
     audio_path = "output/output_polly.mp3"
 
-    # Validate inputs
     if not os.path.exists(audio_path):
         print("❌ Audio file not found.")
         return None
     if not all(os.path.exists(p) for p in [date_img, summary_img, news_img, thank_img]):
-        print("❌ One or more images are missing.")
+        print("❌ One or more images missing.")
         return None
 
-    # Get audio duration
     try:
         audio_info = mediainfo(audio_path)
         duration = float(audio_info['duration'])
@@ -30,11 +26,10 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         print("❌ Could not get audio duration:", e)
         return None
 
-    # Set durations
-    duration1 = 1      # date
-    duration2 = 4      # summary
-    duration4 = 3      # thank you
-    duration3 = max(duration - (duration1 + duration2 + duration4), 1)  # news
+    duration1 = 1
+    duration2 = 4
+    duration4 = 3
+    duration3 = max(duration - (duration1 + duration2 + duration4), 1)
 
     frames = [
         (date_img, duration1),
@@ -51,15 +46,16 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
             img.save(frame_path)
             f.write(f"file '{frame_path}'\n")
             f.write(f"duration {dur}\n")
-        f.write(f"file '{frame_path}'\n")  # Repeat last frame for accurate closure
+        f.write(f"file '{frame_path}'\n")
 
-    # Combine with FFmpeg
     try:
-        ffmpeg.input(input_txt, format='concat', safe=0)\
-              .output(audio_path, output_video,
-                      vcodec="libx264", acodec="aac",
-                      pix_fmt="yuv420p", shortest=None)\
-              .run(overwrite_output=True)
+        ffmpeg.output(
+            ffmpeg.input(input_txt, format='concat', safe=0),
+            ffmpeg.input(audio_path),
+            output_video,
+            vcodec="libx264", acodec="aac",
+            pix_fmt="yuv420p", shortest=None
+        ).run(overwrite_output=True)
 
         print(f"✅ Final video saved to: {output_video}")
         return output_video
