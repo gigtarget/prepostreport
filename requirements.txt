@@ -11,6 +11,7 @@ pytz
 moviepy
 imageio
 imageio-ffmpeg
-tqdm
 numpy
+tqdm
+decorator
 beautifulsoup4
