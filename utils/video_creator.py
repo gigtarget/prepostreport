@@ -1,97 +1,69 @@
 import os
-import ffmpeg
+from glob import glob
 from PIL import Image
-
-def get_audio_duration(path):
-    try:
-        probe = ffmpeg.probe(path)
-        return float(probe["format"]["duration"])
-    except ffmpeg.Error as e:
-        print("❌ Could not retrieve audio duration.")
-        return 15.0  # fallback default
-
-def save_frame(img_path, save_as):
-    try:
-        if not os.path.exists(img_path):
-            print(f"⚠️ Image not found: {img_path}, using fallback (thank.jpg)")
-            img_path = "templates/thank.jpg"
-
-        img = Image.open(img_path).convert("RGB")
-        img.save(save_as)
-        size = os.path.getsize(save_as)
-        print(f"🖼️ Saved frame: {save_as} | From: {img_path} | Size: {size} bytes")
-    except Exception as e:
-        print(f"❌ Error saving frame from {img_path}: {e}")
+import ffmpeg
+from pydub.utils import mediainfo
 
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
 
-    # 🔁 Clean old frames
-    for f in os.listdir("output"):
-        if f.startswith("frame_") and f.endswith(".jpg"):
-            os.remove(os.path.join("output", f))
-
-    audio_path = "output/output_polly.mp3"
+    # Input files
+    date_img = "output/date.png"
+    summary_img = "output/summary.png"
+    news_img = "output/news.png"
     thank_img = "templates/thank.jpg"
+    audio_path = "output/output_polly.mp3"
 
+    # Validate inputs
     if not os.path.exists(audio_path):
         print("❌ Audio file not found.")
         return None
+    if not all(os.path.exists(p) for p in [date_img, summary_img, news_img, thank_img]):
+        print("❌ One or more images are missing.")
+        return None
 
-    duration = get_audio_duration(audio_path)
-    print(f"🎧 Audio Duration: {duration:.2f} sec")
+    # Get audio duration
+    try:
+        audio_info = mediainfo(audio_path)
+        duration = float(audio_info['duration'])
+    except Exception as e:
+        print("❌ Could not get audio duration:", e)
+        return None
 
-    # Frame timing
-    date_dur = 1
-    summary_dur = 4
-    thank_dur = 3
-    report_dur = max(duration - (date_dur + summary_dur + thank_dur), 1)
+    # Set durations
+    duration1 = 1      # date
+    duration2 = 4      # summary
+    duration4 = 3      # thank you
+    duration3 = max(duration - (duration1 + duration2 + duration4), 1)  # news
 
     frames = [
-        ("output/date.png", date_dur),
-        ("output/summary.png", summary_dur),
-        ("output/news.png", report_dur),
-        (thank_img, thank_dur)
+        (date_img, duration1),
+        (summary_img, duration2),
+        (news_img, duration3),
+        (thank_img, duration4),
     ]
 
-    # Save all frames
-    current_frame = 0
-    for img_path, seconds in frames:
-        for _ in range(int(seconds)):
-            current_frame += 1
-            save_frame(img_path, f"output/frame_{current_frame:03d}.jpg")
+    input_txt = "output/ffmpeg_input.txt"
+    with open(input_txt, "w") as f:
+        for i, (img_path, dur) in enumerate(frames):
+            frame_path = f"output/frame_{i:02d}.jpg"
+            img = Image.open(img_path).convert("RGB")
+            img.save(frame_path)
+            f.write(f"file '{frame_path}'\n")
+            f.write(f"duration {dur}\n")
+        f.write(f"file '{frame_path}'\n")  # Repeat last frame for accurate closure
 
-    # ✅ Frame summary check
-    print("\n🧾 Frame Summary Check:")
-    frame_count = 0
-    for f in sorted(os.listdir("output")):
-        if f.startswith("frame_") and f.endswith(".jpg"):
-            path = os.path.join("output", f)
-            try:
-                img = Image.open(path)
-                frame_count += 1
-                print(f"✅ {f}: {img.size} | {os.path.getsize(path)} bytes")
-            except Exception as e:
-                print(f"❌ Failed to read {f}: {e}")
-    print(f"➡️ Total frames detected: {frame_count}")
-
-    # 🚀 Start ffmpeg
+    # Combine with FFmpeg
     try:
-        print("\n🚀 Starting FFmpeg with pattern: output/frame_%03d.jpg")
-        video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1)
-        audio_input = ffmpeg.input(audio_path)
-
-        (
-            ffmpeg
-            .output(video_input, audio_input, output_video,
-                    vcodec="libx264", acodec="aac", pix_fmt="yuv420p", shortest=None)
-            .run(overwrite_output=True)
-        )
+        ffmpeg.input(input_txt, format='concat', safe=0)\
+              .output(audio_path, output_video,
+                      vcodec="libx264", acodec="aac",
+                      pix_fmt="yuv420p", shortest=None)\
+              .run(overwrite_output=True)
 
         print(f"✅ Final video saved to: {output_video}")
         return output_video
 
     except ffmpeg.Error as e:
-        err_msg = e.stderr.decode() if e.stderr else str(e)
-        print(f"❌ FFmpeg failed:\n{err_msg}")
+        print("❌ FFmpeg failed:", e.stderr.decode() if e.stderr else str(e))
         return None
