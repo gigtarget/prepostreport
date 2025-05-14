@@ -35,7 +35,7 @@ def create_combined_market_image(
     news_x=800,
     news_y=100,
     news_line_spacing=10,
-    news_wrap_width=70,
+    news_wrap_width=970,
     news_color="black"
 ):
     try:
