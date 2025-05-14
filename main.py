@@ -14,7 +14,6 @@ from utils.audio_generator import generate_audio_with_polly as generate_audio
 from utils.video_creator import create_video_from_images_and_audio as generate_video
 from utils.telegram_alert import send_telegram_message, send_telegram_file
 
-# Load environment variables
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
@@ -27,28 +26,20 @@ def wait_for_telegram_reply(prompt_text=None):
         send_telegram_message(prompt_text)
 
     os.makedirs("output", exist_ok=True)
-
     last_update_id = None
+
     try:
         res = requests.get(GET_UPDATES_URL)
         data = res.json()
-        if data.get("result"):
-            last_update_id = data["result"][-1]["update_id"]
-            with open(OFFSET_FILE, "w") as f:
-                f.write(str(last_update_id))
-        else:
-            with open(OFFSET_FILE, "w") as f:
-                f.write("0")
+        last_id = data["result"][-1]["update_id"] if data.get("result") else 0
+        with open(OFFSET_FILE, "w") as f:
+            f.write(str(last_id))
     except Exception:
         with open(OFFSET_FILE, "w") as f:
             f.write("0")
 
     while True:
         try:
-            if not os.path.exists(OFFSET_FILE):
-                with open(OFFSET_FILE, "w") as f:
-                    f.write("0")
-
             with open(OFFSET_FILE, "r") as f:
                 last_update_id = f.read().strip()
 
@@ -58,6 +49,7 @@ def wait_for_telegram_reply(prompt_text=None):
 
             res = requests.get(GET_UPDATES_URL, params=params)
             data = res.json()
+
             for result in data.get("result", []):
                 last_update_id = result["update_id"]
                 message_text = result["message"]["text"].strip().lower()
@@ -76,23 +68,19 @@ def wait_for_telegram_reply(prompt_text=None):
             time.sleep(5)
 
 def generate_full_report():
-    report = []
-
-    report.append("📊 Indian Market:")
-    nifty = get_yahoo_price_with_change("^NSEI", "NIFTY 50")
-    sensex = get_yahoo_price_with_change("^BSESN", "SENSEX")
-    banknifty = get_yahoo_price_with_change("^NSEBANK", "BANK NIFTY")
-    report += [nifty, sensex, banknifty]
-
-    report.append("\n🌍 Global Markets:")
-    report.append(get_yahoo_price_with_change("^DJI", "Dow Jones"))
-    report.append(get_yahoo_price_with_change("^IXIC", "NASDAQ"))
-    report.append(get_yahoo_price_with_change("^FTSE", "FTSE 100"))
-    report.append(get_yahoo_price_with_change("^N225", "Nikkei 225"))
-
-    report.append("\n📰 Market News:")
+    report = [
+        "📊 Indian Market:",
+        get_yahoo_price_with_change("^NSEI", "NIFTY 50"),
+        get_yahoo_price_with_change("^BSESN", "SENSEX"),
+        get_yahoo_price_with_change("^NSEBANK", "BANK NIFTY"),
+        "\n🌍 Global Markets:",
+        get_yahoo_price_with_change("^DJI", "Dow Jones"),
+        get_yahoo_price_with_change("^IXIC", "NASDAQ"),
+        get_yahoo_price_with_change("^FTSE", "FTSE 100"),
+        get_yahoo_price_with_change("^N225", "Nikkei 225"),
+        "\n📰 Market News:",
+    ]
     report += get_et_market_articles()
-
     return report
 
 def main():
@@ -104,11 +92,9 @@ def main():
         f.write("locked")
 
     report = generate_full_report()
-
     summary_lines = [str(line) for line in report[:20] if isinstance(line, str) and line.strip()]
     news_items = get_et_market_articles()
-    news_lines = [item["title"] if isinstance(item, dict) and "title" in item else str(item) for item in news_items]
-    news_lines = news_lines[:10]
+    news_lines = [item["title"] if isinstance(item, dict) and "title" in item else str(item) for item in news_items][:10]
 
     date_img = overlay_date_on_template("templates/Pre Date.jpg", "output/date.png")
     summary_img = overlay_text_lines_on_template("templates/report.jpg", "output/summary.png", summary_lines)
@@ -121,14 +107,12 @@ def main():
     if news_img:
         send_telegram_file(news_img, "📰 News Summary")
 
-    # SCRIPT STEP
     while True:
         script_text = generate_script_from_report(report)
         send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
         if wait_for_telegram_reply("🤖 Proceed to generate audio? Reply 'yes' to continue or 'no' to regenerate script."):
             break
 
-    # AUDIO STEP
     while True:
         audio_path = generate_audio(script_text)
         if audio_path and os.path.exists(audio_path):
@@ -139,9 +123,9 @@ def main():
         if wait_for_telegram_reply("▶️ Proceed to generate video? Reply 'yes' to continue or 'no' to regenerate audio."):
             break
 
-    # VIDEO STEP
     while True:
         video_path = generate_video()
+        print(f"📹 Video created at: {video_path}")
         if video_path and os.path.exists(video_path):
             send_telegram_file(video_path, "✅ Final Video")
         else:
