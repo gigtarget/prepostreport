@@ -15,7 +15,6 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 GET_UPDATES_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates"
 OFFSET_FILE = "output/last_update.txt"
-LOCK_FILE = "output/.lock"
 
 def get_current_date_ist():
     from datetime import datetime
@@ -57,10 +56,9 @@ def main():
     # 1. Fetch data
     report = []
     report.append("📊 Indian Market:")
-    nifty = get_yahoo_price_with_change("^NSEI", "NIFTY 50")
-    sensex = get_yahoo_price_with_change("^BSESN", "SENSEX")
-    banknifty = get_yahoo_price_with_change("^NSEBANK", "BANK NIFTY")
-    report += [nifty, sensex, banknifty]
+    report.append(get_yahoo_price_with_change("^NSEI", "NIFTY 50"))
+    report.append(get_yahoo_price_with_change("^BSESN", "SENSEX"))
+    report.append(get_yahoo_price_with_change("^NSEBANK", "BANK NIFTY"))
 
     report.append("\n🌍 Global Markets:")
     report.append(get_yahoo_price_with_change("^DJI", "Dow Jones"))
@@ -69,28 +67,27 @@ def main():
     report.append(get_yahoo_price_with_change("^N225", "Nikkei 225"))
 
     index_summary = "\n".join(report)
-
     news_report = get_et_market_articles(limit=5)
 
-    # 2. Create single image
+    # 2. Create image
     date_text = get_current_date_ist()
     final_img = create_combined_market_image(date_text, index_summary, news_report)
-
     send_telegram_file(final_img, caption="🖼️ Combined Report Image")
 
-    # 3. Wait for YES to continue
     if not wait_for_telegram_reply("✅ Image created. Type 'yes' to generate script."):
         return
 
-    script_path = generate_script_from_report(index_summary, news_report)
-
+    combined_text = index_summary + "\n\n" + news_report
+    script_path = generate_script_from_report(combined_text)
     send_telegram_file(script_path, caption="📜 Script created.")
 
     if not wait_for_telegram_reply("✅ Script done. Type 'yes' to generate audio."):
         return
 
-    audio_path = generate_audio(script_path)
+    with open(script_path, "r", encoding="utf-8") as f:
+        script_text = f.read()
 
+    audio_path = generate_audio(script_text)
     send_telegram_file(audio_path, caption="🔊 Audio created.")
 
     if not wait_for_telegram_reply("✅ Audio done. Type 'yes' to generate video."):
