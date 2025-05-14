@@ -2,6 +2,7 @@ import os
 from PIL import Image
 import ffmpeg
 
+
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
 
