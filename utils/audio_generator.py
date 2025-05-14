@@ -21,8 +21,8 @@ def generate_audio_with_polly(script_text, voice_id="Kajal", output_path="./outp
             f.write(response["AudioStream"].read())
 
         print(f"✅ Polly audio saved to: {output_path} using {voice_id} ({engine_type})")
-        return output_path  # ✅ Return path for use in main.py
+        return output_path
 
     except Exception as e:
         print(f"❌ Error generating Polly audio: {e}")
-        return None  # ✅ Avoid breaking main.py
+        return None
