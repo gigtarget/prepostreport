@@ -10,7 +10,7 @@ def create_video_from_images_and_audio(
     try:
         os.makedirs("output", exist_ok=True)
 
-        # Convert PNGs to JPGs (FFmpeg sometimes prefers JPG)
+        # Convert PNGs to JPGs if needed
         frame_paths = []
         for i, img_path in enumerate(image_paths):
             if img_path.lower().endswith(".png"):
@@ -21,18 +21,17 @@ def create_video_from_images_and_audio(
             else:
                 frame_paths.append(img_path)
 
-        # Count duration from audio file
+        # Get audio duration
         probe = ffmpeg.probe(audio_path)
         duration = float(probe["format"]["duration"])
         duration_per_frame = duration / len(frame_paths)
 
-        # Create FFmpeg input from images
+        # Create FFmpeg file list
         with open("output/frames.txt", "w") as f:
             for path in frame_paths:
                 f.write(f"file '{path}'\n")
                 f.write(f"duration {duration_per_frame}\n")
-
-        f.write(f"file '{frame_paths[-1]}'\n")  # Show last frame until audio ends
+            f.write(f"file '{frame_paths[-1]}'\n")  # Hold last frame
 
         # Generate video using FFmpeg
         os.system(f"ffmpeg -y -f concat -safe 0 -i output/frames.txt -i {audio_path} -shortest -c:v libx264 -pix_fmt yuv420p -c:a aac {output_video}")
