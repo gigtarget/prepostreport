@@ -15,6 +15,60 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 GET_UPDATES_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates"
 OFFSET_FILE = "output/last_update.txt"
+LOCK_FILE = "output/.lock"
+
+def wait_for_telegram_reply(prompt_text=None):
+    if prompt_text:
+        send_telegram_message(prompt_text)
+
+    os.makedirs("output", exist_ok=True)
+
+    last_update_id = None
+    try:
+        res = requests.get(GET_UPDATES_URL)
+        data = res.json()
+        if data.get("result"):
+            last_update_id = data["result"][-1]["update_id"]
+            with open(OFFSET_FILE, "w") as f:
+                f.write(str(last_update_id))
+        else:
+            with open(OFFSET_FILE, "w") as f:
+                f.write("0")
+    except Exception:
+        with open(OFFSET_FILE, "w") as f:
+            f.write("0")
+
+    while True:
+        try:
+            if not os.path.exists(OFFSET_FILE):
+                with open(OFFSET_FILE, "w") as f:
+                    f.write("0")
+
+            with open(OFFSET_FILE, "r") as f:
+                last_update_id = f.read().strip()
+
+            params = {"timeout": 30}
+            if last_update_id:
+                params["offset"] = int(last_update_id) + 1
+
+            res = requests.get(GET_UPDATES_URL, params=params)
+            data = res.json()
+            for result in data.get("result", []):
+                last_update_id = result["update_id"]
+                message_text = result["message"]["text"].strip().lower()
+                with open(OFFSET_FILE, "w") as f:
+                    f.write(str(last_update_id))
+
+                if message_text == "yes":
+                    return True
+                elif message_text == "no":
+                    return False
+                else:
+                    send_telegram_message("❌ Invalid reply. Type 'yes' or 'no'.")
+            time.sleep(5)
+        except Exception as e:
+            send_telegram_message(f"⚠️ Error waiting for reply: {e}")
+            time.sleep(5)
 
 def get_current_date_ist():
     from datetime import datetime
@@ -22,47 +76,15 @@ def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     return datetime.now(ist).strftime("%d.%m.%Y")
 
-def wait_for_telegram_reply(prompt_text=None):
-    if prompt_text:
-        send_telegram_message(prompt_text)
-
-    offset = 0
-    if os.path.exists(OFFSET_FILE):
-        with open(OFFSET_FILE, "r") as f:
-            try:
-                offset = int(f.read().strip())
-            except:
-                offset = 0
-
-    last_update_id = offset
-
-    while True:
-        try:
-            url = f"{GET_UPDATES_URL}?offset={last_update_id + 1}"
-            response = requests.get(url, timeout=10).json()
-
-            for result in response.get("result", []):
-                update_id = result["update_id"]
-                message = result.get("message", {}).get("text", "").strip().lower()
-
-                last_update_id = max(last_update_id, update_id)
-                with open(OFFSET_FILE, "w") as f:
-                    f.write(str(last_update_id))
-
-                if message == "yes":
-                    return True
-                elif message == "no":
-                    return False
-
-            time.sleep(2)
-        except Exception as e:
-            print(f"Telegram polling error: {e}")
-            time.sleep(5)
-
 def main():
-    print("🚀 Starting pre/post market report generator...")
+    if os.path.exists(LOCK_FILE):
+        print("🛑 Script already ran. Skipping to save API usage.")
+        return
+    os.makedirs("output", exist_ok=True)
+    with open(LOCK_FILE, "w") as f:
+        f.write("locked")
 
-    # 1. Fetch data
+    # Generate report
     report = []
     report.append("📊 Indian Market:")
     report.append(get_yahoo_price_with_change("^NSEI", "NIFTY 50"))
@@ -76,38 +98,45 @@ def main():
     report.append(get_yahoo_price_with_change("^N225", "Nikkei 225"))
 
     index_summary = "\n".join(report)
-    news_report = get_et_market_articles(limit=5)
+    news_report = "\n".join(get_et_market_articles(limit=5))
 
-    # 2. Create image
-    date_text = get_current_date_ist()
-    final_img = create_combined_market_image(date_text, index_summary, news_report)
-    send_telegram_file(final_img, caption="🖼️ Combined Report Image")
+    # Generate and send image
+    final_img = create_combined_market_image(
+        get_current_date_ist(),
+        index_summary,
+        news_report
+    )
+    send_telegram_file(final_img, "🖼️ Market Report")
 
-    if not wait_for_telegram_reply("✅ Image created. Type 'yes' to generate script."):
-        return
+    # SCRIPT STEP
+    while True:
+        combined_text = index_summary + "\n\n" + news_report
+        script_text = generate_script_from_report(combined_text)
+        send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
+        if wait_for_telegram_reply("🤖 Proceed to generate audio? Reply 'yes' to continue or 'no' to regenerate script."):
+            break
 
-    # 3. Script Generation
-    combined_text = index_summary + "\n\n" + news_report
-    script_text = generate_script_from_report(combined_text)
+    # AUDIO STEP
+    while True:
+        audio_path = generate_audio(script_text)
+        if audio_path and os.path.exists(audio_path):
+            send_telegram_file(audio_path, "🎤 Audio Generated")
+        else:
+            send_telegram_message("❌ Audio generation failed. Retrying...")
 
-    script_path = "output/generated_script.txt"
-    with open(script_path, "w", encoding="utf-8") as f:
-        f.write(script_text)
+        if wait_for_telegram_reply("▶️ Proceed to generate video? Reply 'yes' to continue or 'no' to regenerate audio."):
+            break
 
-    send_telegram_message(f"📜 *Script created:*\n\n{script_text}")
+    # VIDEO STEP
+    while True:
+        video_path = generate_video()
+        if video_path and os.path.exists(video_path):
+            send_telegram_file(video_path, "✅ Final Video")
+        else:
+            send_telegram_message("❌ Video generation failed. Retrying...")
 
-    if not wait_for_telegram_reply("✅ Script done. Type 'yes' to generate audio."):
-        return
-
-    # 4. Audio Generation
-    audio_path = generate_audio(script_text)
-    send_telegram_file(audio_path, caption="🔊 Audio created.")
-
-    if not wait_for_telegram_reply("✅ Audio done. Type 'yes' to generate video."):
-        return
-
-    # 5. Video Creation
-    generate_video(image_paths=["output/final_image.png"])
+        if wait_for_telegram_reply("🎬 Happy with this video? Reply 'yes' to finish or 'no' to regenerate video."):
+            break
 
 if __name__ == "__main__":
     main()
