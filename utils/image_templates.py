@@ -16,38 +16,52 @@ def create_combined_market_image(
     news_text,
     template_path="templates/premarket group.jpg",
     output_path="output/final_image.png",
-    font_size_date=120,
-    font_size_summary=48,
-    font_size_news=42,
-    line_spacing=10
+
+    # 📅 Date settings
+    date_font_size=120,
+    date_position=(100, 100),
+    date_color="black",
+
+    # 📈 Summary settings
+    summary_font_size=48,
+    summary_start_pos=(100, 300),
+    summary_line_spacing=10,
+    summary_color="black",
+
+    # 📰 News settings
+    news_font_size=42,
+    news_start_pos=(100, 900),
+    news_line_spacing=10,
+    news_wrap_width=70,
+    news_color="black"
 ):
     try:
         img = Image.open(template_path).convert("RGB")
         draw = ImageDraw.Draw(img)
 
-        date_font = ImageFont.truetype(FONT_PATH, font_size_date)
-        summary_font = ImageFont.truetype(FONT_PATH, font_size_summary)
-        news_font = ImageFont.truetype(FONT_PATH, font_size_news)
+        # Fonts
+        date_font = ImageFont.truetype(FONT_PATH, date_font_size)
+        summary_font = ImageFont.truetype(FONT_PATH, summary_font_size)
+        news_font = ImageFont.truetype(FONT_PATH, news_font_size)
 
-        # 🗓️ Date
-        draw.text((100, 100), f"📅 {date_text}", font=date_font, fill="black")
+        # Draw 📅 Date
+        draw.text(date_position, f"📅 {date_text}", font=date_font, fill=date_color)
 
-        # 📊 Summary
-        y_offset = 300
-        draw.text((100, y_offset), "📈 Market Summary", font=summary_font, fill="black")
+        # Draw 📈 Summary
+        x_summary, y_summary = summary_start_pos
+        draw.text((x_summary, y_summary), "📈 Market Summary", font=summary_font, fill=summary_color)
         for line in summary_text.split("\n"):
-            y_offset += font_size_summary + line_spacing
-            draw.text((100, y_offset), line, font=summary_font, fill="black")
+            y_summary += summary_font_size + summary_line_spacing
+            draw.text((x_summary, y_summary), line, font=summary_font, fill=summary_color)
 
-        # 📰 News
-        y_offset += 100  # Extra space before news
-        draw.text((100, y_offset), "🗞️ Market News", font=news_font, fill="black")
+        # Draw 📰 News
+        x_news, y_news = news_start_pos
+        draw.text((x_news, y_news), "🗞️ Market News", font=news_font, fill=news_color)
         for line in news_text.split("\n"):
-            y_offset += font_size_news + line_spacing
-            wrapped = wrap(line, width=70)
-            for wrap_line in wrapped:
-                draw.text((100, y_offset), wrap_line, font=news_font, fill="black")
-                y_offset += font_size_news + line_spacing
+            y_news += news_font_size + news_line_spacing
+            for wrap_line in wrap(line, width=news_wrap_width):
+                draw.text((x_news, y_news), wrap_line, font=news_font, fill=news_color)
+                y_news += news_font_size + news_line_spacing
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         img.save(output_path)
