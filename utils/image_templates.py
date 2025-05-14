@@ -67,6 +67,11 @@ def create_combined_market_image(
         img = Image.open(template_path).convert("RGB")
         draw = ImageDraw.Draw(img)
 
+        # 🖼️ Image size & orientation
+        width, height = img.size
+        orientation = "landscape" if width > height else "portrait"
+        print(f"🧭 Orientation detected: {orientation} ({width}x{height})")
+
         # Fonts
         date_font = ImageFont.truetype(FONT_PATH, date_font_size)
         summary_font = ImageFont.truetype(FONT_PATH, summary_font_size)
@@ -88,7 +93,7 @@ def create_combined_market_image(
                 w = draw.textlength(base_text + " ", font=summary_font)
                 draw.text((summary_x + w, y_summary), change, font=summary_font, fill=change_color)
 
-        # Draw 📰 News (fixed wrapping)
+        # Draw 📰 News
         draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
         draw_wrapped_text(draw, news_text, news_font, news_x, news_y + news_font_size + 10,
                           max_width=news_wrap_max_width, line_spacing=news_line_spacing, fill=news_color)
