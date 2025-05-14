@@ -47,15 +47,21 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         for path, duration in zip(frame_paths, durations):
             f.write(f"file '{path}'\n")
             f.write(f"duration {duration}\n")
-        # Repeat last frame to ensure duration is applied
+        # Repeat last frame to ensure last duration is applied
         f.write(f"file '{frame_paths[-1]}'\n")
 
     # Step 6: Run FFmpeg to create video
     try:
-        ffmpeg.input(concat_file, format="concat", safe=0) \
-            .output(audio_path, output_video, vcodec="libx264", acodec="aac",
-                    pix_fmt="yuv420p", shortest=None) \
+        video_input = ffmpeg.input(concat_file, format="concat", safe=0)
+        audio_input = ffmpeg.input(audio_path)
+
+        (
+            ffmpeg
+            .output(video_input, audio_input, output_video,
+                    vcodec="libx264", acodec="aac",
+                    pix_fmt="yuv420p", shortest=None)
             .run(overwrite_output=True)
+        )
 
         print(f"✅ Final video saved to: {output_video}")
         return output_video
