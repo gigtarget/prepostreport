@@ -19,18 +19,21 @@ def create_combined_market_image(
 
     # 📅 Date settings
     date_font_size=70,
-    date_position=(150, 100),
+    date_x=150,
+    date_y=100,
     date_color="black",
 
     # 📈 Summary settings
     summary_font_size=48,
-    summary_start_pos=(100, 300),
+    summary_x=100,
+    summary_y=300,
     summary_line_spacing=10,
     summary_color="black",
 
     # 📰 News settings
     news_font_size=42,
-    news_start_pos=(100, 900),
+    news_x=100,
+    news_y=900,
     news_line_spacing=10,
     news_wrap_width=70,
     news_color="black"
@@ -45,22 +48,22 @@ def create_combined_market_image(
         news_font = ImageFont.truetype(FONT_PATH, news_font_size)
 
         # Draw 📅 Date
-        draw.text(date_position, f"📅 {date_text}", font=date_font, fill=date_color)
+        draw.text((date_x, date_y), f"📅 {date_text}", font=date_font, fill=date_color)
 
         # Draw 📈 Summary
-        x_summary, y_summary = summary_start_pos
-        draw.text((x_summary, y_summary), "📈 Market Summary", font=summary_font, fill=summary_color)
+        draw.text((summary_x, summary_y), "📈 Market Summary", font=summary_font, fill=summary_color)
+        y_summary = summary_y
         for line in summary_text.split("\n"):
             y_summary += summary_font_size + summary_line_spacing
-            draw.text((x_summary, y_summary), line, font=summary_font, fill=summary_color)
+            draw.text((summary_x, y_summary), line, font=summary_font, fill=summary_color)
 
         # Draw 📰 News
-        x_news, y_news = news_start_pos
-        draw.text((x_news, y_news), "🗞️ Market News", font=news_font, fill=news_color)
+        draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
+        y_news = news_y
         for line in news_text.split("\n"):
             y_news += news_font_size + news_line_spacing
             for wrap_line in wrap(line, width=news_wrap_width):
-                draw.text((x_news, y_news), wrap_line, font=news_font, fill=news_color)
+                draw.text((news_x, y_news), wrap_line, font=news_font, fill=news_color)
                 y_news += news_font_size + news_line_spacing
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
