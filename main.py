@@ -108,6 +108,10 @@ def main():
     )
     send_telegram_file(final_img, "🖼️ Market Report")
 
+    # ✅ CLEAR STALE YES BEFORE SCRIPT STEP
+    with open(OFFSET_FILE, "w") as f:
+        f.write("0")
+
     # SCRIPT STEP
     while True:
         combined_text = index_summary + "\n\n" + news_report
