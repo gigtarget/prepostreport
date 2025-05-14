@@ -10,31 +10,31 @@ def create_video_from_images_and_audio(
     try:
         os.makedirs("output", exist_ok=True)
 
-        # Convert PNGs to JPGs if needed
         frame_paths = []
         for i, img_path in enumerate(image_paths):
-            if img_path.lower().endswith(".png"):
-                img = Image.open(img_path).convert("RGB")
-                jpg_path = f"output/frame_{i:03d}.jpg"
-                img.save(jpg_path)
-                frame_paths.append(jpg_path)
-            else:
-                frame_paths.append(img_path)
+            img = Image.open(img_path).convert("RGB")
+            jpg_path = f"output/frame_{i:03d}.jpg"
+            img.save(jpg_path)
+            frame_paths.append(jpg_path)
 
         # Get audio duration
         probe = ffmpeg.probe(audio_path)
         duration = float(probe["format"]["duration"])
         duration_per_frame = duration / len(frame_paths)
 
-        # Create FFmpeg file list
+        # Write frame list with correct relative paths
         with open("output/frames.txt", "w") as f:
             for path in frame_paths:
-                f.write(f"file '{path}'\n")
+                relative_path = os.path.basename(path)
+                f.write(f"file '{relative_path}'\n")
                 f.write(f"duration {duration_per_frame}\n")
-            f.write(f"file '{frame_paths[-1]}'\n")  # Hold last frame
+            f.write(f"file '{os.path.basename(frame_paths[-1])}'\n")  # Hold last frame
 
-        # Generate video using FFmpeg
-        os.system(f"ffmpeg -y -f concat -safe 0 -i output/frames.txt -i {audio_path} -shortest -c:v libx264 -pix_fmt yuv420p -c:a aac {output_video}")
+        # Generate video
+        os.system(
+            f"cd output && ffmpeg -y -f concat -safe 0 -i frames.txt -i ../{audio_path} "
+            f"-shortest -c:v libx264 -pix_fmt yuv420p -c:a aac ../{output_video}"
+        )
 
         print(f"✅ Final video saved to: {output_video}")
         return output_video
