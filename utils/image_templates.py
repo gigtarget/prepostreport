@@ -10,6 +10,14 @@ def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     return datetime.now(ist).strftime("%d.%m.%Y")
 
+def get_color_for_line(line):
+    """Apply color based on point movement"""
+    if "▲" in line or "↑" in line or "+" in line:
+        return "green"
+    elif "▼" in line or "↓" in line or "-" in line:
+        return "red"
+    return "black"
+
 def create_combined_market_image(
     date_text,
     summary_text,
@@ -55,7 +63,8 @@ def create_combined_market_image(
         y_summary = summary_y
         for line in summary_text.split("\n"):
             y_summary += summary_font_size + summary_line_spacing
-            draw.text((summary_x, y_summary), line, font=summary_font, fill=summary_color)
+            color = get_color_for_line(line)
+            draw.text((summary_x, y_summary), line, font=summary_font, fill=color)
 
         # Draw 📰 News
         draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
