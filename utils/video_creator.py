@@ -5,43 +5,35 @@ import ffmpeg
 def create_video_from_images_and_audio(output_video=os.path.abspath("output/final_video.mp4")):
     os.makedirs("output", exist_ok=True)
 
-    # ✅ Manual control: list of (image path, duration)
     frames = [
-        ("output/date.png", 2),       # 2 seconds
-        ("output/summary.png", 5),    # 5 seconds
-        ("output/news.png", 3),       # 3 seconds
-        # ("templates/thank.jpg", 2), # optional
+        ("output/date.png", 2),
+        ("output/summary.png", 5),
+        ("output/news.png", 3),
     ]
 
     frame_paths = []
-
-    # Step 1: Convert images to JPG
     for index, (img_path, duration) in enumerate(frames):
         if not os.path.exists(img_path):
             print(f"❌ Missing image: {img_path}")
             return None
-
         img = Image.open(img_path).convert("RGB")
         frame_name = f"frame_{index:03d}.jpg"
         frame_path = os.path.join("output", frame_name)
         img.save(frame_path)
         frame_paths.append((frame_name, duration))
 
-    # Step 2: Check for audio
     audio_path = "output/output_polly.mp3"
     if not os.path.exists(audio_path):
         print("❌ Audio file not found.")
         return None
 
-    # Step 3: Create concat.txt
     concat_file_path = os.path.join("output", "concat.txt")
     with open(concat_file_path, "w") as f:
         for filename, duration in frame_paths:
             f.write(f"file '{filename}'\n")
             f.write(f"duration {duration}\n")
-        f.write(f"file '{frame_paths[-1][0]}'\n")  # repeat last frame
+        f.write(f"file '{frame_paths[-1][0]}'\n")
 
-    # Step 4: Run FFmpeg from output dir
     original_cwd = os.getcwd()
     os.chdir("output")
 
@@ -60,11 +52,10 @@ def create_video_from_images_and_audio(output_video=os.path.abspath("output/fina
         ).run(overwrite_output=True)
 
         print(f"✅ Final video saved to: {output_video}")
-        return output_video
+        return os.path.abspath(output_video)
 
     except ffmpeg.Error as e:
-        error_msg = e.stderr.decode() if e.stderr else "Unknown FFmpeg error"
-        print(f"❌ FFmpeg failed: {error_msg}")
+        print(f"❌ FFmpeg failed: {e.stderr.decode() if e.stderr else 'Unknown error'}")
         return None
 
     finally:
