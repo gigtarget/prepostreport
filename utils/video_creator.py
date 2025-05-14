@@ -2,7 +2,7 @@ import os
 from PIL import Image
 import ffmpeg
 
-def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
+def create_video_from_images_and_audio(output_video=os.path.abspath("output/final_video.mp4")):
     os.makedirs("output", exist_ok=True)
 
     # Step 1: Define image paths
@@ -19,10 +19,10 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         frame_filename = f"frame_{index:03d}.jpg"
         frame_path = os.path.join("output", frame_filename)
         img.save(frame_path)
-        frame_paths.append(frame_filename)  # just filename
+        frame_paths.append(frame_filename)
         durations.append(duration)
 
-    # Step 2: Add images with fixed durations
+    # Step 2: Add images
     add_image(date_img, 2, 0)
     add_image(summary_img, 5, 1)
 
@@ -39,15 +39,17 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     remaining_time = max(0.5, audio_duration - fixed_duration)
 
     add_image(news_img, remaining_time, 2)
+
+    # Optional – remove this line if you want to skip the thank-you image
     add_image(thank_img, 3, 3)
 
-    # Step 4: Write concat file in output directory
+    # Step 4: Write concat file
     concat_path = os.path.join("output", "concat.txt")
     with open(concat_path, "w") as f:
         for filename, duration in zip(frame_paths, durations):
             f.write(f"file '{filename}'\n")
             f.write(f"duration {duration}\n")
-        f.write(f"file '{frame_paths[-1]}'\n")
+        f.write(f"file '{frame_paths[-1]}'\n")  # Repeat last to apply duration
 
     # Step 5: Change working directory temporarily
     original_cwd = os.getcwd()
@@ -65,7 +67,7 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         )
 
         print(f"✅ Final video saved to: {output_video}")
-        return os.path.join(original_cwd, output_video)
+        return output_video
 
     except ffmpeg.Error as e:
         error_msg = e.stderr.decode() if e.stderr else "Unknown FFmpeg error"
