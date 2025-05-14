@@ -85,7 +85,7 @@ def main():
     with open(script_path, "w", encoding="utf-8") as f:
         f.write(script_text)
 
-    send_telegram_file(script_path, caption="📜 Script created.")
+    send_telegram_message(f"📜 *Script created:*\n\n{script_text}")
 
     if not wait_for_telegram_reply("✅ Script done. Type 'yes' to generate audio."):
         return
