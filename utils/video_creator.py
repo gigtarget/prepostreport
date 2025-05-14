@@ -1,24 +1,20 @@
 import os
-from glob import glob
 from PIL import Image
 import ffmpeg
 
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
 
-    # Step 1: Collect and sort image files (only .png expected: final_image.png)
-    image_files = sorted(glob("output/*.png"))
-    if not image_files:
-        print("❌ No images found to create video.")
+    # Step 1: Use the new single image
+    image_path = "output/final_image.png"
+    if not os.path.exists(image_path):
+        print("❌ final_image.png not found.")
         return None
 
-    # Step 2: Convert images to .jpg with original size
-    frame_paths = []
-    for i, image_path in enumerate(image_files):
-        img = Image.open(image_path).convert("RGB")
-        frame_path = f"output/frame_{i:03d}.jpg"
-        img.save(frame_path)
-        frame_paths.append(frame_path)
+    # Step 2: Convert to .jpg
+    img = Image.open(image_path).convert("RGB")
+    frame_path = "output/frame_000.jpg"
+    img.save(frame_path)
 
     # Step 3: Confirm audio exists
     audio_path = "output/output_polly.mp3"
@@ -29,7 +25,7 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     # Step 4: Get audio duration
     probe = ffmpeg.probe(audio_path)
     audio_duration = float(probe["format"]["duration"])
-    frame_duration = audio_duration / len(frame_paths)
+    frame_duration = audio_duration  # Only one frame, show full audio length
 
     # Step 5: Combine using FFmpeg
     try:
