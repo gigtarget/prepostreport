@@ -29,51 +29,24 @@ def get_yahoo_price_with_change(symbol, label):
         return f"{label}: {current_price} {arrow} {sign}{change}"
 
     except Exception:
-        return f"{label}: Unavailable"
+        return f"{label}: ❌ Error fetching data"
 
-# ------------------ NEWS FETCH ------------------ #
-def get_et_market_articles():
-    rss_url = "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms"
-    feed = feedparser.parse(rss_url)
-    top_articles = []
+# ------------------ MARKET NEWS FETCH ------------------ #
+def get_et_market_articles(limit=None):
+    try:
+        feed_url = "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms"
+        feed = feedparser.parse(feed_url)
+        articles = []
 
-    # ❌ Forbidden keywords that suggest stock tips or recommendations
-    forbidden_phrases = [
-        "stocks to buy", "stocks to watch", "these", "top", "who", "why",
-        "multibagger", "hot stocks", "must buy", "recommend", "price target", "talk", "predict", "what", "want", "smart", "stocks",  "tip"
-    ]
+        for entry in feed.entries:
+            title = entry.get("title", "")
+            if title:
+                articles.append("• " + title.strip())
 
-    for entry in feed.entries:
-        title_lower = entry.title.lower()
-        if any(phrase in title_lower for phrase in forbidden_phrases):
-            continue  # ❌ Skip risky investment articles
+        if limit:
+            articles = articles[:limit]
 
-        try:
-            article = Article(entry.link)
-            article.download()
-            article.parse()
+        return "\n".join(articles) if articles else "No news available."
 
-            cleaned_text = "\n".join(
-                line.strip()
-                for line in article.text.splitlines()
-                if line.strip() and "subscribe" not in line.lower()
-            )
-
-            top_articles.append({
-                "title": article.title,
-                "published": entry.published,
-                "content": cleaned_text[:600] + "..."
-            })
-
-        except Exception:
-            # Fallback to summary if parsing fails
-            top_articles.append({
-                "title": entry.title,
-                "published": entry.published,
-                "content": (entry.get("summary") or "Content unavailable")[:300] + "..."
-            })
-
-        if len(top_articles) >= 5:
-            break  # ✅ Limit to first 5 safe articles
-
-    return top_articles
+    except Exception as e:
+        return f"Error fetching news: {e}"
