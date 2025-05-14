@@ -14,6 +14,7 @@ from utils.audio_generator import generate_audio_with_polly as generate_audio
 from utils.video_creator import create_video_from_images_and_audio as generate_video
 from utils.telegram_alert import send_telegram_message, send_telegram_file
 
+# Load env vars
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
@@ -26,7 +27,6 @@ def wait_for_telegram_reply(prompt_text=None):
         send_telegram_message(prompt_text)
 
     os.makedirs("output", exist_ok=True)
-    last_update_id = None
 
     try:
         res = requests.get(GET_UPDATES_URL)
@@ -92,6 +92,7 @@ def main():
         f.write("locked")
 
     report = generate_full_report()
+
     summary_lines = [str(line) for line in report[:20] if isinstance(line, str) and line.strip()]
     news_items = get_et_market_articles()
     news_lines = [item["title"] if isinstance(item, dict) and "title" in item else str(item) for item in news_items][:10]
@@ -107,12 +108,14 @@ def main():
     if news_img:
         send_telegram_file(news_img, "📰 News Summary")
 
+    # Step 1: Script
     while True:
         script_text = generate_script_from_report(report)
         send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
         if wait_for_telegram_reply("🤖 Proceed to generate audio? Reply 'yes' to continue or 'no' to regenerate script."):
             break
 
+    # Step 2: Audio
     while True:
         audio_path = generate_audio(script_text)
         if audio_path and os.path.exists(audio_path):
@@ -123,13 +126,14 @@ def main():
         if wait_for_telegram_reply("▶️ Proceed to generate video? Reply 'yes' to continue or 'no' to regenerate audio."):
             break
 
+    # Step 3: Video
     while True:
         video_path = generate_video()
-        print(f"📹 Video created at: {video_path}")
+        print(f"📹 generate_video() returned: {video_path}")
         if video_path and os.path.exists(video_path):
             send_telegram_file(video_path, "✅ Final Video")
         else:
-            send_telegram_message("❌ Video generation failed. Retrying...")
+            send_telegram_message(f"❌ Video not found at {video_path}, please check logs.")
 
         if wait_for_telegram_reply("🎬 Happy with this video? Reply 'yes' to finish or 'no' to regenerate video."):
             break
