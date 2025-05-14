@@ -18,8 +18,8 @@ def create_combined_market_image(
     output_path="output/final_image.png",
 
     # 📅 Date settings
-    date_font_size=120,
-    date_position=(100, 100),
+    date_font_size=70,
+    date_position=(150, 100),
     date_color="black",
 
     # 📈 Summary settings
