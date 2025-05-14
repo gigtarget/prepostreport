@@ -12,10 +12,9 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         print("❌ No images found to create video.")
         return None
 
-    # Step 2: Convert images to .jpg and resize
+    # Step 2: Convert images to .jpg with original size
     for i, image_path in enumerate(image_files):
         img = Image.open(image_path).convert("RGB")
-        img = img.resize((1280, 720))
         frame_path = f"output/frame_{i:03d}.jpg"
         img.save(frame_path)
 
