@@ -39,12 +39,12 @@ def create_combined_market_image(
     summary_color="black",
 
     # 📰 News settings
-    news_font_size=42,
-    news_x=800,
-    news_y=110,
-    news_line_spacing=10,
-    news_wrap_width=1970,
-    news_color="black"
+    news_font_size = 42
+    news_x = 740             # Start just right of center (image width ~1360)
+    news_y = 150             # Top padding to stay under heading
+    news_line_spacing = 10
+    news_wrap_width = 38     # ~38 words fits nicely in half the image width
+    news_color = "black"
 ):
     try:
         img = Image.open(template_path).convert("RGB")
