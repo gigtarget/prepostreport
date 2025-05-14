@@ -98,7 +98,7 @@ def main():
         return
 
     # 5. Video Creation
-    generate_video(["output/final_image.png"])
+    generate_video(image_paths=["output/final_image.png"])
 
 if __name__ == "__main__":
     main()
