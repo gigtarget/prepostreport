@@ -2,7 +2,6 @@ from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 import pytz
 import os
-from textwrap import wrap
 
 FONT_PATH = "fonts/Agrandir.ttf"
 
@@ -16,6 +15,25 @@ def extract_text_and_change(line):
     if len(parts) == 2 and (parts[1].startswith(('+', '-')) or parts[1].replace('.', '', 1).isdigit()):
         return parts[0], parts[1]
     return line, None
+
+def draw_wrapped_text(draw, text, font, x, y, max_width, line_spacing, fill):
+    """Custom wrapper using actual pixel width instead of character count"""
+    lines = []
+    for paragraph in text.split("\n"):
+        words = paragraph.split()
+        current_line = ""
+        for word in words:
+            test_line = current_line + word + " "
+            if draw.textlength(test_line, font=font) <= max_width:
+                current_line = test_line
+            else:
+                lines.append(current_line.strip())
+                current_line = word + " "
+        lines.append(current_line.strip())
+
+    for line in lines:
+        draw.text((x, y), line, font=font, fill=fill)
+        y += font.size + line_spacing
 
 def create_combined_market_image(
     date_text,
@@ -42,7 +60,7 @@ def create_combined_market_image(
     news_x=740,
     news_y=150,
     news_line_spacing=10,
-    news_wrap_width=38,
+    news_wrap_max_width=540,
     news_color="black"
 ):
     try:
@@ -57,10 +75,9 @@ def create_combined_market_image(
         # Draw 📅 Date
         draw.text((date_x, date_y), f"📅 {date_text}", font=date_font, fill=date_color)
 
-        # Draw 📈 Summary (INDIA + GLOBAL)
+        # Draw 📈 Summary
         draw.text((summary_x, summary_y), "📈 Market Summary", font=summary_font, fill=summary_color)
         y_summary = summary_y
-
         for line in summary_text.split("\n"):
             y_summary += summary_font_size + summary_line_spacing
             base_text, change = extract_text_and_change(line)
@@ -71,14 +88,10 @@ def create_combined_market_image(
                 w = draw.textlength(base_text + " ", font=summary_font)
                 draw.text((summary_x + w, y_summary), change, font=summary_font, fill=change_color)
 
-        # Draw 📰 News
+        # Draw 📰 News (fixed wrapping)
         draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
-        y_news = news_y
-        for line in news_text.split("\n"):
-            y_news += news_font_size + news_line_spacing
-            for wrap_line in wrap(line, width=news_wrap_width):
-                draw.text((news_x, y_news), wrap_line, font=news_font, fill=news_color)
-                y_news += news_font_size + news_line_spacing
+        draw_wrapped_text(draw, news_text, news_font, news_x, news_y + news_font_size + 10,
+                          max_width=news_wrap_max_width, line_spacing=news_line_spacing, fill=news_color)
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         img.save(output_path)
