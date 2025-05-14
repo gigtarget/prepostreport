@@ -8,7 +8,6 @@ def send_telegram_message(message):
     if not BOT_TOKEN or not CHAT_ID:
         print("⚠️ Telegram credentials missing.")
         return
-
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": message}
     try:
@@ -23,7 +22,7 @@ def send_telegram_file(filepath, caption=None):
         print(f"⚠️ File missing or Telegram credentials not set: {filepath}")
         return
 
-    ext = filepath.split(".")[-1]
+    ext = filepath.split(".")[-1].lower()
     file_field = {
         "mp4": "video",
         "png": "photo",
