@@ -77,22 +77,27 @@ def main():
     if not wait_for_telegram_reply("✅ Image created. Type 'yes' to generate script."):
         return
 
+    # 3. Script Generation
     combined_text = index_summary + "\n\n" + news_report
-    script_path = generate_script_from_report(combined_text)
+    script_text = generate_script_from_report(combined_text)
+
+    script_path = "output/generated_script.txt"
+    with open(script_path, "w", encoding="utf-8") as f:
+        f.write(script_text)
+
     send_telegram_file(script_path, caption="📜 Script created.")
 
     if not wait_for_telegram_reply("✅ Script done. Type 'yes' to generate audio."):
         return
 
-    with open(script_path, "r", encoding="utf-8") as f:
-        script_text = f.read()
-
+    # 4. Audio Generation
     audio_path = generate_audio(script_text)
     send_telegram_file(audio_path, caption="🔊 Audio created.")
 
     if not wait_for_telegram_reply("✅ Audio done. Type 'yes' to generate video."):
         return
 
+    # 5. Video Creation
     generate_video(["output/final_image.png"])
 
 if __name__ == "__main__":
