@@ -22,9 +22,9 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         frame_paths.append(frame_path)
         durations.append(duration)
 
-    # Step 2: Add images with fixed durations
-    add_image(date_img, 2, 0)       # date image for 2 seconds
-    add_image(summary_img, 5, 1)    # summary image for 5 seconds
+    # Step 2: Add images with durations
+    add_image(date_img, 2, 0)
+    add_image(summary_img, 5, 1)
 
     # Step 3: Get audio duration
     audio_path = "output/output_polly.mp3"
@@ -35,28 +35,31 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     probe = ffmpeg.probe(audio_path)
     audio_duration = float(probe["format"]["duration"])
 
-    # Step 4: Compute remaining time for news image
-    fixed_duration = 2 + 5 + 3  # date + summary + thank
+    fixed_duration = 2 + 5 + 3
     remaining_time = max(0.5, audio_duration - fixed_duration)
 
-    add_image(news_img, remaining_time, 2)  # news image for remaining time
-    add_image(thank_img, 3, 3)              # thank image for 3 seconds
+    add_image(news_img, remaining_time, 2)
+    add_image(thank_img, 3, 3)
 
-    # Step 5: Create FFmpeg concat text file
+    # Step 4: Write concat.txt for FFmpeg
     concat_file = "output/concat.txt"
     with open(concat_file, "w") as f:
         for path, duration in zip(frame_paths, durations):
             f.write(f"file '{path}'\n")
             f.write(f"duration {duration}\n")
-        # Repeat last frame to ensure duration is applied
         f.write(f"file '{frame_paths[-1]}'\n")
 
-    # Step 6: Run FFmpeg to create video
+    # Step 5: Create video from concat list and add audio
     try:
-        ffmpeg.input(concat_file, format="concat", safe=0) \
-            .output(audio_path, output_video, vcodec="libx264", acodec="aac",
-                    pix_fmt="yuv420p", shortest=None) \
+        video_input = ffmpeg.input(concat_file, format="concat", safe=0)
+        audio_input = ffmpeg.input(audio_path)
+
+        (
+            ffmpeg
+            .output(video_input, audio_input, output_video,
+                    vcodec="libx264", acodec="aac", pix_fmt="yuv420p", shortest=None)
             .run(overwrite_output=True)
+        )
 
         print(f"✅ Final video saved to: {output_video}")
         return output_video
