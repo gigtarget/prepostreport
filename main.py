@@ -26,25 +26,34 @@ def wait_for_telegram_reply(prompt_text=None):
     if prompt_text:
         send_telegram_message(prompt_text)
 
-    last_update_id = 0
+    offset = 0
     if os.path.exists(OFFSET_FILE):
         with open(OFFSET_FILE, "r") as f:
-            last_update_id = int(f.read().strip())
+            try:
+                offset = int(f.read().strip())
+            except:
+                offset = 0
+
+    last_update_id = offset
 
     while True:
         try:
-            response = requests.get(GET_UPDATES_URL, timeout=10).json()
+            url = f"{GET_UPDATES_URL}?offset={last_update_id + 1}"
+            response = requests.get(url, timeout=10).json()
+
             for result in response.get("result", []):
                 update_id = result["update_id"]
                 message = result.get("message", {}).get("text", "").strip().lower()
-                if update_id > last_update_id:
-                    last_update_id = update_id
-                    with open(OFFSET_FILE, "w") as f:
-                        f.write(str(update_id))
-                    if message == "yes":
-                        return True
-                    elif message == "no":
-                        return False
+
+                last_update_id = max(last_update_id, update_id)
+                with open(OFFSET_FILE, "w") as f:
+                    f.write(str(last_update_id))
+
+                if message == "yes":
+                    return True
+                elif message == "no":
+                    return False
+
             time.sleep(2)
         except Exception as e:
             print(f"Telegram polling error: {e}")
