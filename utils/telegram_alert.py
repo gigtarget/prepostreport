@@ -1,45 +1,71 @@
 import os
-import requests
+from PIL import Image
+import ffmpeg
 
-BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+def create_video_from_images_and_audio(output_video=os.path.abspath("output/final_video.mp4")):
+    os.makedirs("output", exist_ok=True)
 
-def send_telegram_message(message):
-    if not BOT_TOKEN or not CHAT_ID:
-        print("⚠️ Telegram credentials missing.")
-        return
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": CHAT_ID, "text": message}
+    # Manual control over images and duration
+    frames = [
+        ("output/date.png", 2),       # 2 seconds
+        ("output/summary.png", 5),    # 5 seconds
+        ("output/news.png", 3),       # 3 seconds
+    ]
+
+    frame_paths = []
+
+    # Convert to JPG frames
+    for index, (img_path, duration) in enumerate(frames):
+        if not os.path.exists(img_path):
+            print(f"❌ Missing image: {img_path}")
+            return None
+        img = Image.open(img_path).convert("RGB")
+        frame_name = f"frame_{index:03d}.jpg"
+        frame_path = os.path.join("output", frame_name)
+        img.save(frame_path)
+        frame_paths.append((frame_name, duration))
+
+    # Ensure audio exists
+    audio_path = "output/output_polly.mp3"
+    if not os.path.exists(audio_path):
+        print("❌ Audio file not found.")
+        return None
+
+    # Write concat.txt file
+    concat_file_path = os.path.join("output", "concat.txt")
+    with open(concat_file_path, "w") as f:
+        for filename, duration in frame_paths:
+            f.write(f"file '{filename}'\n")
+            f.write(f"duration {duration}\n")
+        f.write(f"file '{frame_paths[-1][0]}'\n")  # repeat last frame for correct final duration
+
+    # Switch to output directory
+    original_cwd = os.getcwd()
+    os.chdir("output")
+
     try:
-        response = requests.post(url, data=payload)
-        response.raise_for_status()
-        print("📬 Telegram message sent.")
-    except Exception as e:
-        print(f"❌ Telegram message failed: {e}")
+        video_input = ffmpeg.input("concat.txt", format="concat", safe=0)
+        audio_input = ffmpeg.input("output_polly.mp3")
+        output_abs = os.path.abspath(os.path.basename(output_video))
 
-def send_telegram_file(filepath, caption=None):
-    if not BOT_TOKEN or not CHAT_ID or not os.path.exists(filepath):
-        print(f"⚠️ File missing or Telegram credentials not set: {filepath}")
-        return
+        # Save to absolute path to avoid path mismatch
+        ffmpeg.output(
+            video_input,
+            audio_input,
+            output_abs,
+            vcodec="libx264",
+            acodec="aac",
+            pix_fmt="yuv420p",
+            shortest=None
+        ).run(overwrite_output=True)
 
-    ext = filepath.split(".")[-1].lower()
-    file_field = {
-        "mp4": "video",
-        "png": "photo",
-        "jpg": "photo",
-        "jpeg": "photo",
-        "mp3": "audio"
-    }.get(ext, "document")
+        print(f"✅ Final video saved to: {output_abs}")
+        print(f"📂 Exists? {os.path.exists(output_abs)}")
+        return output_abs
 
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/send{file_field.capitalize()}"
-    with open(filepath, "rb") as f:
-        files = {file_field: f}
-        data = {"chat_id": CHAT_ID}
-        if caption:
-            data["caption"] = caption
-        try:
-            r = requests.post(url, data=data, files=files)
-            r.raise_for_status()
-            print(f"📤 Sent {file_field}: {filepath}")
-        except Exception as e:
-            print(f"❌ Failed to send file: {e}")
+    except ffmpeg.Error as e:
+        print(f"❌ FFmpeg failed: {e.stderr.decode() if e.stderr else 'Unknown error'}")
+        return None
+
+    finally:
+        os.chdir(original_cwd)
