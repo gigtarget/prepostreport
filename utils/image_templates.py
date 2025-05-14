@@ -19,7 +19,7 @@ def create_combined_market_image(
 
     # 📅 Date settings
     date_font_size=70,
-    date_x=150,
+    date_x=100,
     date_y=100,
     date_color="black",
 
@@ -32,8 +32,8 @@ def create_combined_market_image(
 
     # 📰 News settings
     news_font_size=42,
-    news_x=100,
-    news_y=900,
+    news_x=800,
+    news_y=100,
     news_line_spacing=10,
     news_wrap_width=70,
     news_color="black"
