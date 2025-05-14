@@ -10,13 +10,12 @@ def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     return datetime.now(ist).strftime("%d.%m.%Y")
 
-def get_color_for_line(line):
-    """Apply color based on point movement"""
-    if "▲" in line or "↑" in line or "+" in line:
-        return "green"
-    elif "▼" in line or "↓" in line or "-" in line:
-        return "red"
-    return "black"
+def extract_text_and_change(line):
+    """Split line into text and +/- number part (if any)"""
+    parts = line.rsplit(" ", 1)
+    if len(parts) == 2 and (parts[1].startswith(('+', '-')) or parts[1].replace('.', '', 1).isdigit()):
+        return parts[0], parts[1]
+    return line, None
 
 def create_combined_market_image(
     date_text,
@@ -39,12 +38,12 @@ def create_combined_market_image(
     summary_color="black",
 
     # 📰 News settings
-    news_font_size = 42
-    news_x = 740             # Start just right of center (image width ~1360)
-    news_y = 150             # Top padding to stay under heading
-    news_line_spacing = 10
-    news_wrap_width = 38     # ~38 words fits nicely in half the image width
-    news_color = "black"
+    news_font_size=42,
+    news_x=740,
+    news_y=150,
+    news_line_spacing=10,
+    news_wrap_width=38,
+    news_color="black"
 ):
     try:
         img = Image.open(template_path).convert("RGB")
@@ -58,13 +57,19 @@ def create_combined_market_image(
         # Draw 📅 Date
         draw.text((date_x, date_y), f"📅 {date_text}", font=date_font, fill=date_color)
 
-        # Draw 📈 Summary
+        # Draw 📈 Summary (INDIA + GLOBAL)
         draw.text((summary_x, summary_y), "📈 Market Summary", font=summary_font, fill=summary_color)
         y_summary = summary_y
+
         for line in summary_text.split("\n"):
             y_summary += summary_font_size + summary_line_spacing
-            color = get_color_for_line(line)
-            draw.text((summary_x, y_summary), line, font=summary_font, fill=color)
+            base_text, change = extract_text_and_change(line)
+            draw.text((summary_x, y_summary), base_text + " ", font=summary_font, fill=summary_color)
+
+            if change:
+                change_color = "green" if "+" in change else "red"
+                w = draw.textlength(base_text + " ", font=summary_font)
+                draw.text((summary_x + w, y_summary), change, font=summary_font, fill=change_color)
 
         # Draw 📰 News
         draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
