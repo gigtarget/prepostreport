@@ -16,11 +16,13 @@ def extract_text_and_change(line):
     return line, None
 
 def draw_wrapped_text(draw, text, font, x, y, max_width, line_spacing, fill):
-    """Wrap and draw multi-line text with bullets or paragraphs"""
-    for paragraph in text.split("\n"):
-        if not paragraph.strip():
+    """Proper multi-line paragraph text wrapping"""
+    paragraphs = text.split("\n")
+    for para in paragraphs:
+        if not para.strip():
+            y += font.size + line_spacing  # paragraph spacing
             continue
-        words = paragraph.split()
+        words = para.split()
         current_line = ""
         for word in words:
             test_line = current_line + word + " "
@@ -83,11 +85,10 @@ def create_combined_market_image(
         y_summary = summary_y
         for line in summary_text.split("\n"):
             if line.strip().startswith("📊") or line.strip().startswith("🌍") or not line.strip():
-                continue  # Skip category headers and empty lines
+                continue
             y_summary += summary_font_size + summary_line_spacing
             base_text, change = extract_text_and_change(line)
             draw.text((summary_x, y_summary), base_text + " ", font=summary_font, fill=summary_color)
-
             if change:
                 change_color = "green" if "+" in change else "red"
                 w = draw.textlength(base_text + " ", font=summary_font)
