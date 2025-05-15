@@ -78,12 +78,14 @@ def create_combined_market_image(
         news_font = ImageFont.truetype(FONT_PATH, news_font_size)
 
         # Draw 📅 Date
-        draw.text((date_x, date_y), f"📅 {date_text}", font=date_font, fill=date_color)
+        draw.text((date_x, date_y), f"{date_text}", font=date_font, fill=date_color)
 
-        # Draw 📈 Summary
-        draw.text((summary_x, summary_y), "📈 Market Summary", font=summary_font, fill=summary_color)
+        # ✅ Draw only index data (no headings)
         y_summary = summary_y
         for line in summary_text.split("\n"):
+            if line.strip().startswith("📊") or line.strip().startswith("🌍") or not line.strip():
+                continue  # Skip category headers and blank lines
+
             y_summary += summary_font_size + summary_line_spacing
             base_text, change = extract_text_and_change(line)
             draw.text((summary_x, y_summary), base_text + " ", font=summary_font, fill=summary_color)
@@ -93,7 +95,7 @@ def create_combined_market_image(
                 w = draw.textlength(base_text + " ", font=summary_font)
                 draw.text((summary_x + w, y_summary), change, font=summary_font, fill=change_color)
 
-        # Draw 📰 News
+        # Draw 📰 News section
         draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
         draw_wrapped_text(draw, news_text, news_font, news_x, news_y + news_font_size + 10,
                           max_width=news_wrap_max_width, line_spacing=news_line_spacing, fill=news_color)
