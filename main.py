@@ -99,7 +99,8 @@ def main():
 
     index_summary = "\n".join(report)
     news_items = get_et_market_articles(limit=5)
-    news_report = "\n".join([f"• {item}" for item in news_items])
+    news_report = "\n\n".join(news_items)  # <- NOT using bullet points
+
 
 
     # Generate and send image
