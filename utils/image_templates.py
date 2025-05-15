@@ -17,7 +17,7 @@ def extract_text_and_change(line):
     return line, None
 
 def draw_wrapped_text(draw, text, font, x, y, max_width, line_spacing, fill):
-    """Custom wrapper using actual pixel width instead of character count"""
+    """Wrap text based on pixel width, not characters"""
     lines = []
     for paragraph in text.split("\n"):
         words = paragraph.split()
@@ -56,35 +56,35 @@ def create_combined_market_image(
     summary_color="black",
 
     # 📰 News settings
-    news_font_size=22,
-    news_x=740,
-    news_y=150,
-    news_line_spacing=10,
-    news_wrap_max_width=2540,
+    news_font_size=26,
+    news_x=1050,
+    news_y=190,
+    news_line_spacing=16,
+    news_wrap_max_width=1400,
     news_color="black"
 ):
     try:
         img = Image.open(template_path).convert("RGB")
         draw = ImageDraw.Draw(img)
 
-        # 🖼️ Image size & orientation
+        # 🖼️ Orientation check
         width, height = img.size
         orientation = "landscape" if width > height else "portrait"
         print(f"🧭 Orientation detected: {orientation} ({width}x{height})")
 
-        # Fonts
+        # Load fonts
         date_font = ImageFont.truetype(FONT_PATH, date_font_size)
         summary_font = ImageFont.truetype(FONT_PATH, summary_font_size)
         news_font = ImageFont.truetype(FONT_PATH, news_font_size)
 
-        # Draw 📅 Date
+        # 📅 Draw Date
         draw.text((date_x, date_y), f"{date_text}", font=date_font, fill=date_color)
 
-        # ✅ Draw only index data (no headings)
+        # 📈 Draw indices (skip headers like "📊" or "🌍")
         y_summary = summary_y
         for line in summary_text.split("\n"):
             if line.strip().startswith("📊") or line.strip().startswith("🌍") or not line.strip():
-                continue  # Skip category headers and blank lines
+                continue  # Skip category headers and empty lines
 
             y_summary += summary_font_size + summary_line_spacing
             base_text, change = extract_text_and_change(line)
@@ -95,11 +95,20 @@ def create_combined_market_image(
                 w = draw.textlength(base_text + " ", font=summary_font)
                 draw.text((summary_x + w, y_summary), change, font=summary_font, fill=change_color)
 
-        # Draw 📰 News section
+        # 📰 Draw News Section
         draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
-        draw_wrapped_text(draw, news_text, news_font, news_x, news_y + news_font_size + 10,
-                          max_width=news_wrap_max_width, line_spacing=news_line_spacing, fill=news_color)
+        draw_wrapped_text(
+            draw,
+            news_text,
+            news_font,
+            news_x,
+            news_y + news_font_size + 10,
+            max_width=news_wrap_max_width,
+            line_spacing=news_line_spacing,
+            fill=news_color
+        )
 
+        # Save the image
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         img.save(output_path)
         print(f"✅ Combined image saved to: {output_path}")
