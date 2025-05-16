@@ -32,7 +32,7 @@ def get_yahoo_price_with_change(symbol, label):
         return f"{label}: ❌ Error fetching data"
 
 # ------------------ MARKET NEWS FETCH ------------------ #
-def get_et_market_articles():
+def get_et_market_articles(limit=5):  # ✅ ADD limit support
     rss_url = "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms"
     feed = feedparser.parse(rss_url)
     top_articles = []
@@ -81,7 +81,7 @@ def get_et_market_articles():
                 "content": (fallback_summary[:300] + "...") if len(fallback_summary) > 300 else fallback_summary
             })
 
-        if len(top_articles) >= limit:
+        if len(top_articles) >= limit:  # ✅ USE limit
             break
 
     return top_articles
