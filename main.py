@@ -112,7 +112,6 @@ def main():
     # ------------------- Table Structure -------------------
     table_rows = []
     table_rows.append(["Index", "Price", "Change", "%Change", "Sentiment"])
-    table_rows.append(["-" * 8, "-" * 10, "-" * 8, "-" * 8, "-" * 12])
 
     for item in indian_data:
         if item:  # skip if API failed
@@ -120,7 +119,6 @@ def main():
 
     table_rows.append(["", "", "", "", ""])  # spacer row
     table_rows.append(["Index", "Price", "Change", "%Change", "Sentiment"])
-    table_rows.append(["-" * 8, "-" * 10, "-" * 8, "-" * 8, "-" * 12])
 
     for item in global_data:
         if item:
