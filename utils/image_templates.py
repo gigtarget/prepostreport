@@ -34,8 +34,8 @@ def draw_index_table(draw, data, font, start_x, start_y, line_height, fill):
         0: 100,  # Index
         1: 300,  # Price
         2: 450,  # Change
-        3: 610,  # %Change
-        4: 780   # Sentiment
+        3: 600,  # %Change
+        4: 770   # Sentiment
     }
 
     y = start_y
