@@ -70,13 +70,13 @@ def get_current_date_ist():
     return datetime.now(ist).strftime("%d.%m.%Y")
 
 def classify_sentiment(change):
-    if change > 0.6:
+    if change > 0.7:
         return "Bullish"
-    elif change > 0.2:
+    elif change > 0.3:
         return "Slight Bullish"
-    elif change < -0.6:
+    elif change < -0.7:
         return "Bearish"
-    elif change < -0.2:
+    elif change < -0.3:
         return "Slight Bearish"
     else:
         return "Neutral"
