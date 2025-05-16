@@ -9,14 +9,7 @@ def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     return datetime.now(ist).strftime("%d.%m.%Y")
 
-def extract_text_and_change(line):
-    parts = line.rsplit(" ", 1)
-    if len(parts) == 2 and (parts[1].startswith(('+', '-')) or parts[1].replace('.', '', 1).isdigit()):
-        return parts[0], parts[1]
-    return line, None
-
 def draw_wrapped_text(draw, text, font, x, y, max_width, line_spacing, fill):
-    """Wrap text horizontally based on max pixel width"""
     paragraphs = text.split("\n")
     for para in paragraphs:
         if not para.strip():
@@ -43,21 +36,18 @@ def create_combined_market_image(
     template_path="templates/premarket group.jpg",
     output_path="output/final_image.png",
 
-    # 📅 Date
     date_font_size=70,
     date_x=110,
     date_y=190,
     date_color="black",
 
-    # 📈 Summary
-    summary_font_size=38,
+    summary_font_size=32,
     summary_x=110,
-    summary_y=300,
+    summary_y=320,
     summary_line_spacing=10,
     summary_color="black",
 
-    # 📰 News (font size fixed, width auto)
-    news_font_size=30,
+    news_font_size=28,
     news_x=1050,
     news_y=190,
     news_line_spacing=16,
@@ -68,7 +58,6 @@ def create_combined_market_image(
         draw = ImageDraw.Draw(img)
         image_width, image_height = img.size
 
-        # Fonts
         date_font = ImageFont.truetype(FONT_PATH, date_font_size)
         summary_font = ImageFont.truetype(FONT_PATH, summary_font_size)
         news_font = ImageFont.truetype(FONT_PATH, news_font_size)
@@ -76,32 +65,19 @@ def create_combined_market_image(
         # Draw 📅 Date
         draw.text((date_x, date_y), f"{date_text}", font=date_font, fill=date_color)
 
-        # Draw 📈 Indices
-        y_summary = summary_y
-        global_section_started = False
-        for line in summary_text.split("\n"):
-            if line.strip().startswith("📊") or line.strip().startswith("🌍") or not line.strip():
-                if "🌍" in line:
-                    global_section_started = True
-                continue
+        # Draw 📈 Table Summary
+        draw_wrapped_text(
+            draw,
+            summary_text,
+            summary_font,
+            summary_x,
+            summary_y,
+            max_width=880,
+            line_spacing=summary_line_spacing,
+            fill=summary_color
+        )
 
-            if global_section_started:
-                y_summary += 60
-                global_section_started = False
-
-            y_summary += summary_font.size + summary_line_spacing
-            base_text, change = extract_text_and_change(line)
-            draw.text((summary_x, y_summary), base_text + " ", font=summary_font, fill=summary_color)
-            if change:
-                change_color = "green" if "+" in change else "red"
-                w = draw.textlength(base_text + " ", font=summary_font)
-                draw.text((summary_x + w, y_summary), change, font=summary_font, fill=change_color)
-
-        # Auto calculate width based on image size
-        margin = 80
-        news_wrap_max_width = image_width - news_x - margin
-
-        # Draw 📰 Market News
+        # Draw 📰 News Section
         draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
         draw_wrapped_text(
             draw,
@@ -109,7 +85,7 @@ def create_combined_market_image(
             news_font,
             news_x,
             news_y + news_font.size + 10,
-            max_width=news_wrap_max_width,
+            max_width=image_width - news_x - 80,
             line_spacing=news_line_spacing,
             fill=news_color
         )
