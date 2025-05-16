@@ -107,7 +107,7 @@ def create_combined_market_image(
             news_font,
             news_x,
             news_y + news_font.size + 10,
-            max_width=image_width - news_x - 60,
+            max_width=image_width - news_x - 80,
             line_spacing=news_line_spacing,
             fill=news_color
         )
