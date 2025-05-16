@@ -5,29 +5,14 @@ import os
 
 FONT_PATH = "fonts/Agrandir.ttf"
 
+def draw_table_text(draw, lines, font, x, y, line_spacing, fill):
+    for line in lines:
+        draw.text((x, y), line, font=font, fill=fill)
+        y += font.size + line_spacing
+
 def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     return datetime.now(ist).strftime("%d.%m.%Y")
-
-def draw_wrapped_text(draw, text, font, x, y, max_width, line_spacing, fill):
-    paragraphs = text.split("\n")
-    for para in paragraphs:
-        if not para.strip():
-            y += font.size + line_spacing
-            continue
-        words = para.split()
-        current_line = ""
-        for word in words:
-            test_line = current_line + word + " "
-            if draw.textlength(test_line, font=font) <= max_width:
-                current_line = test_line
-            else:
-                draw.text((x, y), current_line.strip(), font=font, fill=fill)
-                y += font.size + line_spacing
-                current_line = word + " "
-        if current_line:
-            draw.text((x, y), current_line.strip(), font=font, fill=fill)
-            y += font.size + line_spacing
 
 def create_combined_market_image(
     date_text,
@@ -41,7 +26,7 @@ def create_combined_market_image(
     date_y=190,
     date_color="black",
 
-    summary_font_size=32,
+    summary_font_size=30,
     summary_x=110,
     summary_y=320,
     summary_line_spacing=10,
@@ -65,30 +50,14 @@ def create_combined_market_image(
         # Draw 📅 Date
         draw.text((date_x, date_y), f"{date_text}", font=date_font, fill=date_color)
 
-        # Draw 📈 Table Summary
-        draw_wrapped_text(
-            draw,
-            summary_text,
-            summary_font,
-            summary_x,
-            summary_y,
-            max_width=880,
-            line_spacing=summary_line_spacing,
-            fill=summary_color
-        )
+        # Draw table-style summary (line by line for aligned columns)
+        summary_lines = summary_text.split("\n")
+        draw_table_text(draw, summary_lines, summary_font, summary_x, summary_y, summary_line_spacing, summary_color)
 
-        # Draw 📰 News Section
+        # Draw 📰 Market News
         draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
-        draw_wrapped_text(
-            draw,
-            news_text,
-            news_font,
-            news_x,
-            news_y + news_font.size + 10,
-            max_width=image_width - news_x - 80,
-            line_spacing=news_line_spacing,
-            fill=news_color
-        )
+        news_lines = news_text.split("\n")
+        draw_table_text(draw, news_lines, news_font, news_x, news_y + news_font.size + 10, news_line_spacing, news_color)
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         img.save(output_path)
