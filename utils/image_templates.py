@@ -86,7 +86,7 @@ def create_combined_market_image(
                 continue
 
             if global_section_started:
-                y_summary += 40
+                y_summary += 60
                 global_section_started = False
 
             y_summary += summary_font.size + summary_line_spacing
