@@ -50,9 +50,9 @@ def create_combined_market_image(
     date_color="black",
 
     # 📈 Summary
-    summary_font_size=48,
+    summary_font_size=38,
     summary_x=110,
-    summary_y=414,
+    summary_y=300,
     summary_line_spacing=10,
     summary_color="black",
 
