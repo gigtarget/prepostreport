@@ -29,16 +29,28 @@ def draw_wrapped_text(draw, text, font, x, y, max_width, line_spacing, fill):
             y += font.size + line_spacing
 
 def draw_index_table(draw, data, font, start_x, start_y, line_height, fill):
-    # Fixed column positions (pixels)
-    col_x = [start_x, start_x + 160, start_x + 320, start_x + 450, start_x + 580]
-    y = start_y
+    # Fixed X positions for each column
+    col_x = {
+        0: 110,  # Index Name
+        1: 330,  # Price
+        2: 520,  # Change
+        3: 670,  # %Change
+        4: 820   # Sentiment
+    }
 
-    for i, row in enumerate(data):
+    y = start_y
+    for row in data:
         if all(cell == "" for cell in row):
-            y += line_height  # Add spacing on blank rows
+            y += line_height
             continue
         for j, text in enumerate(row):
-            draw.text((col_x[j], y), text, font=font, fill=fill)
+            color = fill
+            if j in (2, 3):  # Change & %Change columns
+                if "+" in text:
+                    color = "green"
+                elif "-" in text:
+                    color = "red"
+            draw.text((col_x[j], y), text, font=font, fill=color)
         y += line_height
 
 def create_combined_market_image(
@@ -48,14 +60,20 @@ def create_combined_market_image(
     template_path="templates/premarket group.jpg",
     output_path="output/final_image.png",
 
+    # Date settings
     date_font_size=70,
-    table_font_size=30,
-    news_font_size=26,
     date_x=110,
     date_y=190,
+    date_color="black",
+
+    # Table settings
+    table_font_size=30,
     table_start_x=110,
     table_start_y=330,
     table_line_height=42,
+
+    # News settings
+    news_font_size=26,
     news_x=1050,
     news_y=190,
     news_line_spacing=10,
@@ -64,18 +82,19 @@ def create_combined_market_image(
     try:
         img = Image.open(template_path).convert("RGB")
         draw = ImageDraw.Draw(img)
+        image_width, _ = img.size
 
         date_font = ImageFont.truetype(FONT_PATH, date_font_size)
         table_font = ImageFont.truetype(FONT_PATH, table_font_size)
         news_font = ImageFont.truetype(FONT_PATH, news_font_size)
 
-        # Draw date
-        draw.text((date_x, date_y), date_text, font=date_font, fill="black")
+        # 📅 Date
+        draw.text((date_x, date_y), date_text, font=date_font, fill=date_color)
 
-        # Draw table
-        draw_index_table(draw, table_rows, table_font, table_start_x, table_start_y, table_line_height, "black")
+        # 📈 Table
+        draw_index_table(draw, table_rows, table_font, table_start_x, table_start_y, table_line_height, fill="black")
 
-        # Draw news
+        # 🗞️ News
         draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
         draw_wrapped_text(
             draw,
@@ -83,7 +102,7 @@ def create_combined_market_image(
             news_font,
             news_x,
             news_y + news_font.size + 10,
-            max_width=1920 - news_x - 60,  # fit in image width
+            max_width=image_width - news_x - 60,
             line_spacing=news_line_spacing,
             fill=news_color
         )
