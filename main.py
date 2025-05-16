@@ -22,7 +22,6 @@ def wait_for_telegram_reply(prompt_text=None):
         send_telegram_message(prompt_text)
 
     os.makedirs("output", exist_ok=True)
-
     try:
         res = requests.get(GET_UPDATES_URL)
         data = res.json()
@@ -70,21 +69,21 @@ def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     return datetime.now(ist).strftime("%d.%m.%Y")
 
-def build_index_table(data_list):
-    def format_row(label, price, change_pts, change_pct, sentiment):
-        return f"{label:<12} | {price:>10} | {change_pts:>8} | {change_pct:>8} | {sentiment}"
+def classify_sentiment(change):
+    if change > 0.5:
+        return "Bullish"
+    elif change > 0.1:
+        return "Slight Bullish"
+    elif change < -0.5:
+        return "Bearish"
+    elif change < -0.1:
+        return "Slight Bearish"
+    else:
+        return "Neutral"
 
-    header = format_row("Index", "Price", "Change", "%Change", "Sentiment")
-    divider = "-" * len(header)
-    rows = [format_row(
-        row['label'],
-        f"{row['price']:.2f}",
-        f"{row['change_pts']:+.2f}",
-        f"{row['change_pct']:+.2f}%",
-        row['sentiment']
-    ) for row in data_list]
-
-    return "\n".join([header, divider] + rows)
+def format_table_row(label, price, change_pts, change_pct):
+    sentiment = classify_sentiment(change_pct)
+    return [label, f"{price:,.2f}", f"{change_pts:+.2f}", f"{change_pct:+.2f}%", sentiment]
 
 def main():
     if os.path.exists(LOCK_FILE):
@@ -94,33 +93,47 @@ def main():
     with open(LOCK_FILE, "w") as f:
         f.write("locked")
 
-    # Indian indices
-    indian = [
-        get_yahoo_price_with_change("^NSEI", "NIFTY 50"),
-        get_yahoo_price_with_change("^BSESN", "SENSEX"),
-        get_yahoo_price_with_change("^NSEBANK", "BANK NIFTY")
+    # ------------------- Index Data -------------------
+    indian_symbols = [
+        ("^NSEI", "NIFTY 50"),
+        ("^BSESN", "SENSEX"),
+        ("^NSEBANK", "BANK NIFTY")
+    ]
+    global_symbols = [
+        ("^DJI", "Dow Jones"),
+        ("^IXIC", "NASDAQ"),
+        ("^FTSE", "FTSE 100"),
+        ("^N225", "Nikkei 225")
     ]
 
-    # Global indices
-    global_ = [
-        get_yahoo_price_with_change("^DJI", "Dow Jones"),
-        get_yahoo_price_with_change("^IXIC", "NASDAQ"),
-        get_yahoo_price_with_change("^FTSE", "FTSE 100"),
-        get_yahoo_price_with_change("^N225", "Nikkei 225")
-    ]
+    indian_data = [get_yahoo_price_with_change(sym, lbl) for sym, lbl in indian_symbols]
+    global_data = [get_yahoo_price_with_change(sym, lbl) for sym, lbl in global_symbols]
 
-    # Final aligned summary text
-    summary_text = "🔷 Indian Indices Snapshot\n" + build_index_table(indian)
-    summary_text += "\n\n🌍 Global Markets Overview\n" + build_index_table(global_)
+    # ------------------- Table Structure -------------------
+    table_rows = []
+    table_rows.append(["Index", "Price", "Change", "%Change", "Sentiment"])
+    table_rows.append(["-" * 8, "-" * 10, "-" * 8, "-" * 8, "-" * 12])
 
-    # News
+    for item in indian_data:
+        if item:  # skip if API failed
+            table_rows.append(format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"]))
+
+    table_rows.append(["", "", "", "", ""])  # spacer row
+    table_rows.append(["Index", "Price", "Change", "%Change", "Sentiment"])
+    table_rows.append(["-" * 8, "-" * 10, "-" * 8, "-" * 8, "-" * 12])
+
+    for item in global_data:
+        if item:
+            table_rows.append(format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"]))
+
+    # ------------------- News -------------------
     news_items = get_et_market_articles(limit=5)
     news_report = "\n\n".join([f"• {item['title']}" for item in news_items])
 
-    # Create & send image
+    # ------------------- Create Image -------------------
     final_img = create_combined_market_image(
         get_current_date_ist(),
-        summary_text,
+        table_rows,
         news_report
     )
     if final_img and os.path.exists(final_img):
@@ -129,18 +142,18 @@ def main():
         send_telegram_message("❌ Failed to create market image.")
         return
 
-    # SCRIPT STEP
+    # ------------------- Script -------------------
     with open(OFFSET_FILE, "w") as f:
         f.write("0")
 
     while True:
-        combined_text = summary_text + "\n\n" + news_report
+        combined_text = "\n".join(["\t".join(row) for row in table_rows]) + "\n\n" + news_report
         script_text = generate_script_from_report(combined_text)
         send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
         if wait_for_telegram_reply("🤖 Proceed to generate audio? Reply 'yes' to continue or 'no' to regenerate script."):
             break
 
-    # AUDIO STEP
+    # ------------------- Audio -------------------
     while True:
         audio_path = generate_audio(script_text)
         if audio_path and os.path.exists(audio_path):
@@ -150,7 +163,7 @@ def main():
         if wait_for_telegram_reply("▶️ Proceed to generate video? Reply 'yes' to continue or 'no' to regenerate audio."):
             break
 
-    # VIDEO STEP
+    # ------------------- Video -------------------
     while True:
         video_path = generate_video()
         if video_path and os.path.exists(video_path):
