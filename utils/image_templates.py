@@ -31,9 +31,9 @@ def draw_wrapped_text(draw, text, font, x, y, max_width, line_spacing, fill):
 def draw_index_table(draw, data, font, start_x, start_y, line_height, fill):
     # Fixed column x positions
     col_x = {
-        0: 800,  # Index
+        0: 80,  # Index
         1: 300,  # Price
-        2: 500,  # Change
+        2: 480,  # Change
         3: 650,  # %Change
         4: 820   # Sentiment
     }
