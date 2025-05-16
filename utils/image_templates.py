@@ -57,11 +57,11 @@ def create_combined_market_image(
     summary_color="black",
 
     # 📰 News settings (all fixed)
-    news_font_size=26,
+    news_font_size=16,
     news_x=1050,                # Fixed position (no auto-detect)
     news_y=190,
     news_line_spacing=16,
-    news_wrap_max_width=800,   # Fixed width for wrapping
+    news_wrap_max_width=3800,   # Fixed width for wrapping
     news_color="black"
 ):
     try:
