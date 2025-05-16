@@ -23,7 +23,6 @@ def wait_for_telegram_reply(prompt_text=None):
 
     os.makedirs("output", exist_ok=True)
 
-    last_update_id = None
     try:
         res = requests.get(GET_UPDATES_URL)
         data = res.json()
@@ -40,13 +39,8 @@ def wait_for_telegram_reply(prompt_text=None):
 
     while True:
         try:
-            if not os.path.exists(OFFSET_FILE):
-                with open(OFFSET_FILE, "w") as f:
-                    f.write("0")
-
             with open(OFFSET_FILE, "r") as f:
                 last_update_id = f.read().strip()
-
             params = {"timeout": 30}
             if last_update_id:
                 params["offset"] = int(last_update_id) + 1
@@ -76,6 +70,15 @@ def get_current_date_ist():
     ist = pytz.timezone("Asia/Kolkata")
     return datetime.now(ist).strftime("%d.%m.%Y")
 
+def build_index_table(data_list):
+    header = "Index         | Price     | Change    | %Change  | Sentiment"
+    divider = "-" * len(header)
+    rows = []
+    for item in data_list:
+        row = f"{item['label']:<13} | {item['price']:>9} | {item['arrow']} {item['change_pts']:>7} | {item['change_pct']:>7}% | {item['sentiment']}"
+        rows.append(row)
+    return "\n".join([header, divider] + rows)
+
 def main():
     if os.path.exists(LOCK_FILE):
         print("🛑 Script already ran. Skipping to save API usage.")
@@ -84,38 +87,46 @@ def main():
     with open(LOCK_FILE, "w") as f:
         f.write("locked")
 
-    # Generate report
-    report = []
-    report.append("📊 Indian Market:")
-    report.append(get_yahoo_price_with_change("^NSEI", "NIFTY 50"))
-    report.append(get_yahoo_price_with_change("^BSESN", "SENSEX"))
-    report.append(get_yahoo_price_with_change("^NSEBANK", "BANK NIFTY"))
+    # Fetch index data
+    indian = [
+        get_yahoo_price_with_change("^NSEI", "NIFTY 50"),
+        get_yahoo_price_with_change("^BSESN", "SENSEX"),
+        get_yahoo_price_with_change("^NSEBANK", "BANK NIFTY")
+    ]
+    global_ = [
+        get_yahoo_price_with_change("^DJI", "Dow Jones"),
+        get_yahoo_price_with_change("^IXIC", "NASDAQ"),
+        get_yahoo_price_with_change("^FTSE", "FTSE 100"),
+        get_yahoo_price_with_change("^N225", "Nikkei 225")
+    ]
 
-    report.append("\n🌍 Global Markets:")
-    report.append(get_yahoo_price_with_change("^DJI", "Dow Jones"))
-    report.append(get_yahoo_price_with_change("^IXIC", "NASDAQ"))
-    report.append(get_yahoo_price_with_change("^FTSE", "FTSE 100"))
-    report.append(get_yahoo_price_with_change("^N225", "Nikkei 225"))
+    # Build table-style text
+    summary_text = "🔷 Indian Indices Snapshot\n" + build_index_table(indian)
+    summary_text += "\n\n🌍 Global Markets Overview\n" + build_index_table(global_)
 
-    index_summary = "\n".join(report)
+    # Format news
     news_items = get_et_market_articles(limit=5)
     news_report = "\n\n".join([f"• {item['title']}" for item in news_items])
 
     # Generate and send image
     final_img = create_combined_market_image(
         get_current_date_ist(),
-        index_summary,
+        summary_text,
         news_report
     )
-    send_telegram_file(final_img, "🖼️ Market Report")
+    if final_img and os.path.exists(final_img):
+        send_telegram_file(final_img, "🖼️ Market Report")
+    else:
+        send_telegram_message("❌ Failed to create market image.")
+        return
 
-    # ✅ CLEAR STALE YES BEFORE SCRIPT STEP
+    # Clear stale YES before script step
     with open(OFFSET_FILE, "w") as f:
         f.write("0")
 
     # SCRIPT STEP
     while True:
-        combined_text = index_summary + "\n\n" + news_report
+        combined_text = summary_text + "\n\n" + news_report
         script_text = generate_script_from_report(combined_text)
         send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
         if wait_for_telegram_reply("🤖 Proceed to generate audio? Reply 'yes' to continue or 'no' to regenerate script."):
@@ -128,7 +139,6 @@ def main():
             send_telegram_file(audio_path, "🎤 Audio Generated")
         else:
             send_telegram_message("❌ Audio generation failed. Retrying...")
-
         if wait_for_telegram_reply("▶️ Proceed to generate video? Reply 'yes' to continue or 'no' to regenerate audio."):
             break
 
@@ -139,7 +149,6 @@ def main():
             send_telegram_file(video_path, "✅ Final Video")
         else:
             send_telegram_message("❌ Video generation failed. Retrying...")
-
         if wait_for_telegram_reply("🎬 Happy with this video? Reply 'yes' to finish or 'no' to regenerate video."):
             break
 
