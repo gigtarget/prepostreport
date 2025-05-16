@@ -38,10 +38,25 @@ def get_et_market_articles():
     top_articles = []
 
     # ❌ Forbidden keywords that suggest stock tips or recommendations
-    forbidden_phrases = [
-        "stocks to buy", "stocks to watch", "these", "top", "who", "why",
-        "multibagger", "hot stocks", "must buy", "recommend", "price target", "talk", "predict", "what", "want", "smart", "stocks",  "tip"
-    ]
+forbidden_phrases = [
+    "stocks to buy", "stocks to watch", "these", "top", "who", "why",
+    "multibagger", "hot stocks", "must buy", "recommend", "price target", "talk", "predict", "what", "want", "smart", "stocks", "tip",
+
+    # Interrogative / Demonstrative (extra)
+    "whom", "whose", "when", "where", "which", "how", "how much", "how many", "how far", "how long", "how often", "how come", "this", "that", "those",
+
+    # Chart Patterns
+    "head and shoulders", "inverse head and shoulders", "double top", "double bottom", "triple top", "triple bottom",
+    "rounding top", "rounding bottom", "cup and handle", "island reversal", "diamond top", "diamond bottom",
+    "ascending triangle", "descending triangle", "symmetrical triangle", "falling wedge", "rising wedge",
+    "rectangle pattern", "bullish flag", "bearish flag", "bullish pennant", "bearish pennant", "broadening formation",
+    "megaphone pattern", "channel up", "channel down", "gap up", "gap down", "breakout", "retest",
+
+    # Candlestick Patterns
+    "hammer", "inverted hammer", "bullish engulfing", "bearish engulfing", "morning star", "evening star",
+    "piercing line", "dark cloud cover", "three white soldiers", "three black crows", "doji", "dragonfly doji",
+    "gravestone doji", "spinning top", "marubozu", "hanging man", "shooting star", "harami", "tweezer top", "tweezer bottom"
+]
 
     for entry in feed.entries:
         title_lower = entry.title.lower()
