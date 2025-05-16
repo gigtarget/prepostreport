@@ -85,9 +85,9 @@ def format_table_row(label, price, change_pts, change_pct):
     sentiment = classify_sentiment(change_pct)
     return [
         label,
-        f"{int(price):,}",
-        f"{int(change_pts):+}",
-        f"{int(change_pct):+}%",
+        f"{int(price):,}",                     # Price: integer only
+        f"{int(change_pts):+}",                # Change: integer only
+        f"{change_pct:+.2f}%",                 # %Change: keep 2 decimal places
         sentiment
     ]
 
