@@ -125,6 +125,7 @@ def main():
 
     table_rows.append(["", "", "", "", ""])  # spacer
     table_rows.append(["", "", "", "", ""])  # spacer
+    table_rows.append(["", "", "", "", ""])  # spacer
     table_rows.append(["Index", "Price", "Change", "%Change", "Sentiment"])
 
     for item in global_data:
