@@ -77,7 +77,7 @@ def create_combined_market_image(
     table_line_height=42,
 
     # News
-    news_font_size=26,
+    news_font_size=30,
     news_x=1050,
     news_y=150,
     news_line_spacing=10,
