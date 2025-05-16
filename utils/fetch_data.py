@@ -81,7 +81,7 @@ def get_et_market_articles():
                 "content": (fallback_summary[:300] + "...") if len(fallback_summary) > 300 else fallback_summary
             })
 
-        if len(top_articles) >= 5:
+        if len(top_articles) >= limit:
             break
 
     return top_articles
