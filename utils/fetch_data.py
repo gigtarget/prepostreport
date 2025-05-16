@@ -19,20 +19,41 @@ def get_yahoo_price_with_change(symbol, label):
         res.raise_for_status()
         data = res.json()["chart"]["result"][0]["meta"]
 
-        current_price = round(data["regularMarketPrice"])
-        previous_close = round(data["previousClose"])
-        change = round(current_price - previous_close)
+        current_price = round(data["regularMarketPrice"], 2)
+        previous_close = round(data["previousClose"], 2)
+        change = round(current_price - previous_close, 2)
+        change_pct = round((change / previous_close) * 100, 2)
 
         arrow = "▲" if change > 0 else "▼" if change < 0 else "⏸"
-        sign = "+" if change > 0 else ""
+        sentiment = (
+            "Bullish" if change_pct > 0.4 else
+            "Slight Bullish" if 0 < change_pct <= 0.4 else
+            "Neutral" if abs(change_pct) < 0.2 else
+            "Slight Bearish" if -0.4 <= change_pct < 0 else
+            "Bearish"
+        )
 
-        return f"{label}: {current_price} {arrow} {sign}{change}"
+        return {
+            "label": label,
+            "price": current_price,
+            "change_pts": change,
+            "change_pct": change_pct,
+            "arrow": arrow,
+            "sentiment": sentiment
+        }
 
     except Exception:
-        return f"{label}: ❌ Error fetching data"
+        return {
+            "label": label,
+            "price": "❌",
+            "change_pts": "❌",
+            "change_pct": "❌",
+            "arrow": "⛔",
+            "sentiment": "Unavailable"
+        }
 
 # ------------------ MARKET NEWS FETCH ------------------ #
-def get_et_market_articles(limit=5):  # ✅ ADD limit support
+def get_et_market_articles(limit=5):
     rss_url = "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms"
     feed = feedparser.parse(rss_url)
     top_articles = []
@@ -41,8 +62,8 @@ def get_et_market_articles(limit=5):  # ✅ ADD limit support
         "stocks to buy", "stocks to watch", "these", "top", "who", "why",
         "multibagger", "hot stocks", "must buy", "recommend", "price target", "talk", "predict", "what", "want", "smart", "stocks", "tip",
         "whom", "whose", "when", "where", "which", "how", "how much", "how many", "how far", "how long", "how often", "how come", "this", "that", "those",
-        "head and shoulders", "live", "double top", "double bottom", "triple top", "triple bottom",
-        "review", "rounding bottom", "cup and handle", "island reversal", "diamond top", "diamond bottom",
+        "head and shoulders", "double top", "double bottom", "triple top", "triple bottom",
+        "rounding top", "rounding bottom", "cup and handle", "island reversal", "diamond top", "diamond bottom",
         "ascending triangle", "descending triangle", "symmetrical triangle", "falling wedge", "rising wedge",
         "rectangle pattern", "bullish flag", "bearish flag", "bullish pennant", "bearish pennant", "broadening formation",
         "megaphone pattern", "channel up", "channel down", "gap up", "gap down", "breakout", "retest",
@@ -56,32 +77,11 @@ def get_et_market_articles(limit=5):  # ✅ ADD limit support
         if any(phrase in title.lower() for phrase in forbidden_phrases):
             continue
 
-        try:
-            article = Article(entry.link)
-            article.download()
-            article.parse()
+        top_articles.append({
+            "title": title
+        })
 
-            content = "\n".join(
-                line.strip()
-                for line in article.text.splitlines()
-                if line.strip() and "subscribe" not in line.lower()
-            )
-
-            top_articles.append({
-                "title": title,
-                "published": entry.get("published", "Unknown"),
-                "content": (content[:600] + "...") if len(content) > 600 else content
-            })
-
-        except Exception:
-            fallback_summary = entry.get("summary", "Content unavailable").strip()
-            top_articles.append({
-                "title": title,
-                "published": entry.get("published", "Unknown"),
-                "content": (fallback_summary[:300] + "...") if len(fallback_summary) > 300 else fallback_summary
-            })
-
-        if len(top_articles) >= limit:  # ✅ USE limit
+        if len(top_articles) >= limit:
             break
 
     return top_articles
