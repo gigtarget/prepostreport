@@ -71,12 +71,19 @@ def get_current_date_ist():
     return datetime.now(ist).strftime("%d.%m.%Y")
 
 def build_index_table(data_list):
-    header = "Index         | Price     | Change    | %Change  | Sentiment"
+    def format_row(label, price, change_pts, change_pct, sentiment):
+        return f"{label:<12} | {price:>10} | {change_pts:>8} | {change_pct:>8} | {sentiment}"
+
+    header = format_row("Index", "Price", "Change", "%Change", "Sentiment")
     divider = "-" * len(header)
-    rows = []
-    for item in data_list:
-        row = f"{item['label']:<13} | {item['price']:>9} | {item['arrow']} {item['change_pts']:>7} | {item['change_pct']:>7}% | {item['sentiment']}"
-        rows.append(row)
+    rows = [format_row(
+        row['label'],
+        f"{row['price']:.2f}",
+        f"{row['change_pts']:+.2f}",
+        f"{row['change_pct']:+.2f}%",
+        row['sentiment']
+    ) for row in data_list]
+
     return "\n".join([header, divider] + rows)
 
 def main():
@@ -87,12 +94,14 @@ def main():
     with open(LOCK_FILE, "w") as f:
         f.write("locked")
 
-    # Fetch index data
+    # Indian indices
     indian = [
         get_yahoo_price_with_change("^NSEI", "NIFTY 50"),
         get_yahoo_price_with_change("^BSESN", "SENSEX"),
         get_yahoo_price_with_change("^NSEBANK", "BANK NIFTY")
     ]
+
+    # Global indices
     global_ = [
         get_yahoo_price_with_change("^DJI", "Dow Jones"),
         get_yahoo_price_with_change("^IXIC", "NASDAQ"),
@@ -100,15 +109,15 @@ def main():
         get_yahoo_price_with_change("^N225", "Nikkei 225")
     ]
 
-    # Build table-style text
+    # Final aligned summary text
     summary_text = "🔷 Indian Indices Snapshot\n" + build_index_table(indian)
     summary_text += "\n\n🌍 Global Markets Overview\n" + build_index_table(global_)
 
-    # Format news
+    # News
     news_items = get_et_market_articles(limit=5)
     news_report = "\n\n".join([f"• {item['title']}" for item in news_items])
 
-    # Generate and send image
+    # Create & send image
     final_img = create_combined_market_image(
         get_current_date_ist(),
         summary_text,
@@ -120,11 +129,10 @@ def main():
         send_telegram_message("❌ Failed to create market image.")
         return
 
-    # Clear stale YES before script step
+    # SCRIPT STEP
     with open(OFFSET_FILE, "w") as f:
         f.write("0")
 
-    # SCRIPT STEP
     while True:
         combined_text = summary_text + "\n\n" + news_report
         script_text = generate_script_from_report(combined_text)
