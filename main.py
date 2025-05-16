@@ -98,7 +98,8 @@ def main():
     report.append(get_yahoo_price_with_change("^N225", "Nikkei 225"))
 
     index_summary = "\n".join(report)
-    news_report = get_et_market_articles(limit=5)  # Already returns formatted string with \n
+    news_items = get_et_market_articles(limit=5)
+    news_report = "\n\n".join([f"• {item['title']}" for item in news_items])
 
     # Generate and send image
     final_img = create_combined_market_image(
