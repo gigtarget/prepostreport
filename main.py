@@ -124,6 +124,7 @@ def main():
             table_rows.append(format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"]))
 
     table_rows.append(["", "", "", "", ""])  # spacer
+    table_rows.append(["", "", "", "", ""])  # spacer
     table_rows.append(["Index", "Price", "Change", "%Change", "Sentiment"])
 
     for item in global_data:
