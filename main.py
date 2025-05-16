@@ -83,24 +83,11 @@ def classify_sentiment(change):
 
 def format_table_row(label, price, change_pts, change_pct):
     sentiment = classify_sentiment(change_pct)
-
-    # Determine currency symbol based on index name
-    if "NIFTY" in label or "SENSEX" in label:
-        currency = "₹"
-    elif "Dow" in label or "NASDAQ" in label:
-        currency = "$"
-    elif "FTSE" in label:
-        currency = "£"
-    elif "Nikkei" in label:
-        currency = "¥"
-    else:
-        currency = ""
-
     return [
         label,
-        f"{currency}{int(price):,}",         # Price with currency symbol
-        f"{int(change_pts):+}",              # Change: integer with sign
-        f"{change_pct:+.2f}%",               # %Change: signed float
+        f"{int(price):,}",                     # Price: integer only
+        f"{int(change_pts):+}",                # Change: integer only
+        f"{change_pct:+.2f}%",                 # %Change: keep 2 decimal places
         sentiment
     ]
 
