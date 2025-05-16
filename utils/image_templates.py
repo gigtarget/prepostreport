@@ -34,8 +34,8 @@ def draw_index_table(draw, data, font, start_x, start_y, line_height, fill):
         0: 100,  # Index
         1: 300,  # Price
         2: 440,  # Change
-        3: 590,  # %Change
-        4: 760   # Sentiment
+        3: 580,  # %Change
+        4: 750   # Sentiment
     }
 
     y = start_y
@@ -100,7 +100,7 @@ def create_combined_market_image(
         draw_index_table(draw, table_rows, table_font, table_start_x, table_start_y, table_line_height, fill="black")
 
         # Draw news
-        draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
+        #draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
         draw_wrapped_text(
             draw,
             news_text,
