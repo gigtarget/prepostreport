@@ -25,18 +25,13 @@ def get_yahoo_price_with_change(symbol, label):
         change_pct = round((change / previous_close) * 100, 2)
 
         arrow = "▲" if change > 0 else "▼" if change < 0 else "⏸"
-
-        # 🎯 Sentiment Logic
-        if change_pct >= 0.5:
-            sentiment = "Bullish"
-        elif change_pct >= 0.2:
-            sentiment = "Slight Bullish"
-        elif change_pct <= -0.5:
-            sentiment = "Bearish"
-        elif change_pct <= -0.2:
-            sentiment = "Slight Bearish"
-        else:
-            sentiment = "Neutral"
+        sentiment = (
+            "Bullish" if change_pct > 0.4 else
+            "Slight Bullish" if 0 < change_pct <= 0.4 else
+            "Neutral" if abs(change_pct) < 0.2 else
+            "Slight Bearish" if -0.4 <= change_pct < 0 else
+            "Bearish"
+        )
 
         return {
             "label": label,
