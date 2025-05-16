@@ -33,9 +33,9 @@ def draw_index_table(draw, data, font, start_x, start_y, line_height, fill):
     col_x = {
         0: 100,  # Index
         1: 300,  # Price
-        2: 450,  # Change
-        3: 600,  # %Change
-        4: 770   # Sentiment
+        2: 440,  # Change
+        3: 590,  # %Change
+        4: 760   # Sentiment
     }
 
     y = start_y
@@ -79,7 +79,7 @@ def create_combined_market_image(
     # News
     news_font_size=26,
     news_x=1050,
-    news_y=190,
+    news_y=150,
     news_line_spacing=10,
     news_color="black"
 ):
