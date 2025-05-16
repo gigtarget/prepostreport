@@ -31,7 +31,7 @@ def draw_wrapped_text(draw, text, font, x, y, max_width, line_spacing, fill):
 def draw_index_table(draw, data, font, start_x, start_y, line_height, fill):
     # Fixed column x positions
     col_x = {
-        0: 110,  # Index
+        0: 100,  # Index
         1: 330,  # Price
         2: 520,  # Change
         3: 670,  # %Change
@@ -66,13 +66,13 @@ def create_combined_market_image(
 
     # Date
     date_font_size=70,
-    date_x=110,
-    date_y=190,
+    date_x=114,
+    date_y=150,
     date_color="black",
 
     # Table
     table_font_size=30,
-    table_start_x=110,
+    table_start_x=114,
     table_start_y=330,
     table_line_height=42,
 
