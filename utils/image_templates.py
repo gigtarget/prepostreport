@@ -56,12 +56,12 @@ def create_combined_market_image(
     summary_line_spacing=10,
     summary_color="black",
 
-    # 📰 News settings (all fixed)
-    news_font_size=30
+    # 📰 News settings
+    news_font_size=30,
     news_x=1050,
     news_y=190,
     news_line_spacing=16,
-    news_wrap_max_width=1900,
+    news_wrap_max_width=900,
     news_color="black"
 ):
     try:
@@ -78,7 +78,7 @@ def create_combined_market_image(
 
         # Draw 📈 Index Summary
         y_summary = summary_y
-        global_section_started = False  # flag for spacing between sections
+        global_section_started = False  # flag to add gap before global indices
 
         for line in summary_text.split("\n"):
             if line.strip().startswith("📊") or line.strip().startswith("🌍") or not line.strip():
@@ -87,7 +87,7 @@ def create_combined_market_image(
                 continue
 
             if global_section_started:
-                y_summary += 40  # extra spacing between Indian & Global
+                y_summary += 40  # extra spacing before global indices
                 global_section_started = False
 
             y_summary += summary_font.size + summary_line_spacing
@@ -98,7 +98,7 @@ def create_combined_market_image(
                 w = draw.textlength(base_text + " ", font=summary_font)
                 draw.text((summary_x + w, y_summary), change, font=summary_font, fill=change_color)
 
-        # Draw 📰 News
+        # Draw 📰 Market News
         draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
         draw_wrapped_text(
             draw,
