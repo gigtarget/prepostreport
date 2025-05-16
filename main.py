@@ -83,7 +83,13 @@ def classify_sentiment(change):
 
 def format_table_row(label, price, change_pts, change_pct):
     sentiment = classify_sentiment(change_pct)
-    return [label, f"{price:,.2f}", f"{change_pts:+.2f}", f"{change_pct:+.2f}%", sentiment]
+    return [
+        label,
+        f"{int(price):,}",
+        f"{int(change_pts):+}",
+        f"{int(change_pct):+}%",
+        sentiment
+    ]
 
 def main():
     if os.path.exists(LOCK_FILE):
@@ -114,10 +120,10 @@ def main():
     table_rows.append(["Index", "Price", "Change", "%Change", "Sentiment"])
 
     for item in indian_data:
-        if item:  # skip if API failed
+        if item:
             table_rows.append(format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"]))
 
-    table_rows.append(["", "", "", "", ""])  # spacer row
+    table_rows.append(["", "", "", "", ""])  # spacer
     table_rows.append(["Index", "Price", "Change", "%Change", "Sentiment"])
 
     for item in global_data:
