@@ -10,4 +10,7 @@ ffmpeg-python
 pytz
 beautifulsoup4
 pydub
-ffmpeg-python
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
