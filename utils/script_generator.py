@@ -10,14 +10,15 @@ You are a financial content creator writing for Indian retail traders. Based on 
 \"\"\"{report_text}\"\"\"
 
 Write a short, clear, human-sounding YouTube Shorts script that:
-- Start with signature line, Good morning, traders. Let’s gear up for the day under 5 minutes.
+- Start with signature line, Good morning, Let’s gear up for the day under minutes.
 - Includes only relevant and helpful info for a trader, about Indian market updates (NIFTY/SENSEX/BANK NIFTY if available).
 - See if out of any news can have impact on stock market, which is not related to stocks. 
 - Sounds like a human is speaking (not robotic)
 - Skips news or stocks which has unavailable stock data about companies only.
 - Avoid news like these 4 or 5 stock are above or below this level.
 - Avoids overloading with too many numbers.
-- Uses simple, conversational Hinglish, use words like up, down, percentage,  
+- Uses simple, conversational Hinglish, use words like up, down, percentage.
+- Request to like, share, and subscribe for daily report and ask for something engaging in comments. 
 
 The tone should feel helpful and energetic, like you're helping a fellow trader quickly prep for their day. The script should be in Hinglish — mostly english but to make viewer comfortable we can use few hindi words to help and relate with script better , keep all numbers in english don't use any strong hindi word which will be difficult to understand use english word in that case, like a real Indian trader talking. No narrator notes, just the word-by-word script.
 
