@@ -9,6 +9,7 @@ from utils.script_generator import generate_youtube_script_from_report as genera
 from utils.audio_generator import generate_audio_with_polly as generate_audio
 from utils.video_creator import create_video_from_images_and_audio as generate_video
 from utils.telegram_alert import send_telegram_message, send_telegram_file
+from utils.uploader import upload_video_railway  # <-- Added for YouTube
 
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -177,6 +178,14 @@ def main():
         else:
             send_telegram_message("❌ Video generation failed. Retrying...")
         if wait_for_telegram_reply("🎬 Happy with this video? Reply 'yes' to finish or 'no' to regenerate video."):
+            # ✅ Upload to YouTube
+            upload_video_railway(
+                video_path=video_path,
+                title=f"📈 Indian Stock Market Premarket Report – {get_current_date_ist()}",
+                description="Highlights from NIFTY, SENSEX, global markets, and market sentiment. Stay informed before the bell rings!",
+                tags=["Indian Stock Market", "Nifty", "Premarket", "BSE", "Sensex"],
+                privacy="public"
+            )
             break
 
 if __name__ == "__main__":
