@@ -11,10 +11,10 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         print("❌ final_image.png not found.")
         return None
 
-    # Step 2: Convert to .jpg
+    # Step 2: Convert to .jpg with max quality
     img = Image.open(image_path).convert("RGB")
     frame_path = "output/frame_000.jpg"
-    img.save(frame_path)
+    img.save(frame_path, quality=100)  # MAX QUALITY
 
     # Step 3: Confirm audio exists
     audio_path = "output/output_polly.mp3"
@@ -23,20 +23,31 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         return None
 
     # Step 4: Get audio duration
-    probe = ffmpeg.probe(audio_path)
-    audio_duration = float(probe["format"]["duration"])
-    frame_duration = audio_duration  # Only one frame, show full audio length
+    try:
+        probe = ffmpeg.probe(audio_path)
+        audio_duration = float(probe["format"]["duration"])
+    except Exception as e:
+        print(f"❌ Failed to probe audio duration: {e}")
+        return None
 
-    # Step 5: Combine using FFmpeg
+    frame_duration = audio_duration  # Only one frame shown for entire duration
+
+    # Step 5: Combine frame and audio into video
     try:
         video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1 / frame_duration)
         audio_input = ffmpeg.input(audio_path)
 
         (
             ffmpeg
-            .output(video_input, audio_input, output_video,
-                    vcodec="libx264", acodec="aac",
-                    pix_fmt="yuv420p", shortest=None)
+            .output(
+                video_input, audio_input, output_video,
+                vcodec="libx264",
+                acodec="aac",
+                crf=18,              # Lower = better quality (0–51, recommended: 18–23)
+                preset="slow",       # Better compression and quality
+                pix_fmt="yuv420p",
+                shortest=None
+            )
             .run(overwrite_output=True)
         )
 
@@ -44,5 +55,5 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         return output_video
 
     except ffmpeg.Error as e:
-        print(f"❌ FFmpeg failed: {e.stderr.decode()}")
+        print(f"❌ FFmpeg failed:\n{e.stderr.decode()}")
         return None
