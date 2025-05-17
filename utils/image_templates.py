@@ -65,7 +65,7 @@ def create_combined_market_image(
 
     # Date
     date_font_size=70,
-    date_x=110,
+    date_x=100,
     date_y=155,
     date_color="black",
 
