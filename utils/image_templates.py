@@ -29,7 +29,6 @@ def draw_wrapped_text(draw, text, font, x, y, max_width, line_spacing, fill):
             y += font.size + line_spacing
 
 def draw_index_table(draw, data, font, start_x, start_y, line_height, fill):
-    # Fixed column x positions
     col_x = {
         0: 100,  # Index
         1: 300,  # Price
@@ -99,8 +98,7 @@ def create_combined_market_image(
         # Draw index table
         draw_index_table(draw, table_rows, table_font, table_start_x, table_start_y, table_line_height, fill="black")
 
-        # Draw news
-        #draw.text((news_x, news_y), "🗞️ Market News", font=news_font, fill=news_color)
+        # Draw news content
         draw_wrapped_text(
             draw,
             news_text,
@@ -113,7 +111,15 @@ def create_combined_market_image(
         )
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        img.save(output_path)
+
+        # Save image in high quality
+        if output_path.lower().endswith(".jpg") or output_path.lower().endswith(".jpeg"):
+            img.save(output_path, quality=95)
+        elif output_path.lower().endswith(".png"):
+            img.save(output_path, compress_level=0)
+        else:
+            img.save(output_path)  # Fallback default
+
         print(f"✅ Combined image saved to: {output_path}")
         return output_path
 
