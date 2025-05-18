@@ -4,11 +4,9 @@ import os
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def generate_youtube_script_from_report(report_text):
-    prompt = f"""
-You are a financial content creator writing for Indian retail traders. Based on the following pre-market report:
+    prompt = f"""You are a financial content creator writing for Indian retail traders. Based on the following pre-market report:
 
-"""
-The variable `report_text` contains today's pre-market summary including index data, stock trends, and news.
+\"\"\"{report_text}\"\"\"
 
 Write a short, energetic YouTube Shorts script that:
 - Starts with the signature line: "Good morning".
@@ -20,9 +18,7 @@ Write a short, energetic YouTube Shorts script that:
 - Keeps the script natural and casual.
 - Ends with: a call to like, share, and subscribe for daily reports, and a question to spark engagement in the comments.
 
-Respond only with the final script.
-"""
-
+Respond only with the final script."""
 
     response = client.chat.completions.create(
         model="gpt-4",
