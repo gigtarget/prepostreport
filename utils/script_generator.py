@@ -9,7 +9,7 @@ def generate_youtube_script_from_report(report_text):
 \"\"\"{report_text}\"\"\"
 
 Write a short, clear, human-sounding YouTube script for pre market report in HINGLISH that:
-- Start with signature line, "Good morning". as it is. 
+- Start with signature line, "Good morning guys. Let’s get you ready for aaj ka market session". as it is. 
 - Includes only relevant and helpful info for a trader, about Indian market updates (NIFTY/SENSEX/BANK NIFTY if available).
 - See if out of any news can have impact on stock market, which is not related to stocks. 
 - Sounds like a human is speaking (not robotic)
