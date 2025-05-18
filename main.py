@@ -71,6 +71,11 @@ def get_current_date_ist():
     return datetime.now(ist).strftime("%d.%m.%Y")
 
 def classify_sentiment(change):
+    try:
+        change = float(change)
+    except (ValueError, TypeError):
+        return "Neutral"
+
     if change > 0.7:
         return "Bullish"
     elif change > 0.3:
@@ -81,6 +86,7 @@ def classify_sentiment(change):
         return "Slight Bearish"
     else:
         return "Neutral"
+
 
 def format_table_row(label, price, change_pts, change_pct):
     sentiment = classify_sentiment(change_pct)
