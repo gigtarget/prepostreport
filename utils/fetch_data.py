@@ -69,7 +69,7 @@ def get_et_market_articles(limit=5):
         "megaphone pattern", "channel up", "channel down", "gap up", "gap down", "breakout", "retest",
         "hammer", "inverted hammer", "bullish engulfing", "bearish engulfing", "morning star", "evening star",
         "piercing line", "dark cloud cover", "three white soldiers", "three black crows", "doji", "dragonfly doji",
-        "gravestone doji", "spinning top", "marubozu", "hanging man", "shooting star", "harami", "tweezer top", "tweezer bottom"
+        "gravestone doji", "spinning top", "marubozu", "says", "shooting star", "harami", "tweezer top", "tweezer bottom"
     ]
 
     for entry in feed.entries:
