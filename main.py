@@ -3,7 +3,6 @@ import time
 import requests
 from dotenv import load_dotenv
 
-
 from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
 from utils.image_templates import create_combined_market_image
 from utils.script_generator import generate_youtube_script_from_report as generate_script_from_report
@@ -88,14 +87,14 @@ def classify_sentiment(change):
         return "Neutral"
 
 def format_table_row(label, price, change_pts, change_pct):
-    sentiment = classify_sentiment(change_pct)
-    return [
-        label,
-        f"{int(price):,}",
-        f"{int(change_pts):+}",
-        f"{change_pct:+.2f}%",
-        sentiment
-    ]
+    try:
+        sentiment = classify_sentiment(change_pct)
+        formatted_price = f"{int(price):,}"
+        formatted_change_pts = f"{int(change_pts):+}"
+        formatted_change_pct = f"{float(change_pct):+.2f}%"
+    except (ValueError, TypeError):
+        return None  # Skip this row if any value is invalid
+    return [label, formatted_price, formatted_change_pts, formatted_change_pct, sentiment]
 
 def main():
     if os.path.exists(LOCK_FILE):
@@ -125,7 +124,9 @@ def main():
 
     for item in indian_data:
         if item:
-            table_rows.append(format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"]))
+            row = format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"])
+            if row:
+                table_rows.append(row)
 
     table_rows.append(["", "", "", "", ""])
     table_rows.append(["", "", "", "", ""])
@@ -134,7 +135,9 @@ def main():
 
     for item in global_data:
         if item:
-            table_rows.append(format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"]))
+            row = format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"])
+            if row:
+                table_rows.append(row)
 
     news_items = get_et_market_articles(limit=5)
     news_report = "\n\n".join([f"• {item['title']}" for item in news_items])
