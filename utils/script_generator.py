@@ -4,26 +4,27 @@ import os
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def generate_youtube_script_from_report(report_text):
-    prompt = f"""You are a financial content creator writing for Indian retail traders. Based on the following pre-market report:
+    prompt = f"""आप एक भारतीय रिटेल ट्रेडर हैं जो प्री-मार्केट रिपोर्ट के आधार पर YouTube Shorts स्क्रिप्ट तैयार कर रहे हैं।
 
 \"\"\"{report_text}\"\"\"
 
-Write a short, energetic YouTube Shorts script that is in "HINGLISH language", not english totally:
-- Starts with the signature line: "Good morning".
-- Sounds like a Indian retail trader helping a fellow trader prep for the day — in simple, conversational Hinglish.
-- Focuses only on relevant Indian market updates — NIFTY, SENSEX, BANK NIFTY, and any important macro news affecting the market.
-- Filters out irrelevant or incomplete stock data and skips vague or non-actionable stock lists.
-- Avoids robotic tone, filler words, hype, or hard Hindi words. All numbers should be in English.
-- Avoid terms like “dosto”, “upar-niche”, or overly technical jargon.
-- Keeps the script natural and casual.
-- Ends with: a call to like, share, and subscribe for daily reports, and a question to spark engagement in the comments.
+एक शॉर्ट, ऊर्जा से भरी स्क्रिप्ट लिखिए जो:
+- "Good morning" से शुरू हो
+- ज्यादातर **हिंदी में हो**, सिर्फ ज़रूरत पड़ने पर English words यूज़ करें (जैसे index के नाम, percentage, technical terms)
+- NIFTY, SENSEX, BANK NIFTY और कोई भी ज़रूरी आर्थिक खबर को कवर करे
+- जिन कंपनियों का price या बदलाव नहीं दिया गया हो, उन्हें skip करे
+- ज़्यादा डेटा या भारी भरकम शब्दों से बचे, बात सीधी और trader के काम की होनी चाहिए
+- ऐसे words ना use करें जैसे “upar gaya”, “naya rule aaya hai”, “IPO aa sakta hai”, “thoda”, “dhyaan dena” — script में casual hinglish की बजाय साफ़, समझदार हिंदी इस्तेमाल करें
+- आवाज़ robotic या clickbait नहीं होनी चाहिए — सच्ची, मददगार और प्रोफेशनल trader जैसी लगनी चाहिए
+- आख़िर में एक friendly CTA जोड़ें — like, share, subscribe करने के लिए कहें और एक सिंपल सवाल पूछें comments में engagement के लिए
 
-Respond only with the final script."""
+सिर्फ फाइनल स्क्रिप्ट दें — कोई narrator नोट या अतिरिक्त जानकारी नहीं।
+"""
 
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are a helpful financial scriptwriter for YouTube Shorts, focused on Indian traders."},
+            {"role": "system", "content": "आप एक भारतीय स्टॉक मार्केट एनालिस्ट हैं जो YouTube Shorts के लिए ज्यादातर हिंदी में ट्रेडिंग अपडेट स्क्रिप्ट लिखते हैं। बातचीत प्रोफेशनल और सीधी होनी चाहिए, casual hinglish का इस्तेमाल नहीं होना चाहिए।"},
             {"role": "user", "content": prompt}
         ],
         temperature=0.8
