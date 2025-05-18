@@ -8,7 +8,7 @@ def generate_youtube_script_from_report(report_text):
 
 \"\"\"{report_text}\"\"\"
 
-Write a short, energetic YouTube Shorts script that:
+Write a short, energetic YouTube Shorts script that is in "HINGLISH language", not english totally:
 - Starts with the signature line: "Good morning".
 - Sounds like a Indian retail trader helping a fellow trader prep for the day — in simple, conversational Hinglish.
 - Focuses only on relevant Indian market updates — NIFTY, SENSEX, BANK NIFTY, and any important macro news affecting the market.
