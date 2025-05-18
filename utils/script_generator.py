@@ -7,23 +7,22 @@ def generate_youtube_script_from_report(report_text):
     prompt = f"""
 You are a financial content creator writing for Indian retail traders. Based on the following pre-market report:
 
-\"\"\"{report_text}\"\"\"
-
-Write a short, clear, human-sounding YouTube Shorts script that:
-- Start with signature line, "Good morning". as it is. 
-- Includes only relevant and helpful info for a trader, about Indian market updates (NIFTY/SENSEX/BANK NIFTY if available).
-- See if out of any news can have impact on stock market, which is not related to stocks. 
-- Sounds like a human is speaking (not robotic)
-- Skips news or stocks which has unavailable stock data about companies only.
-- Avoid news like these 4 or 5 stock are above or below this level.
-- Avoids overloading with too many numbers, and very important don't use words like, "dosto", "niche", "par".
-- Uses simple, conversational Hinglish, use words like up, down, percentage.
-- Request to like, share, and subscribe for daily report and ask for something engaging in comments. 
-
-The tone should feel helpful and energetic, like you're helping a fellow trader quickly prep for their day. The script should be in Hinglish — mostly english but to make viewer comfortable we can use few hindi words to help and relate with script better , keep all numbers in english don't use any strong hindi word which will be difficult to understand use english word in that case, like a real Indian trader talking. No narrator notes, just the word-by-word script.
-
-Respond with only the final script.
 """
+The variable `report_text` contains today's pre-market summary including index data, stock trends, and news.
+
+Write a short, energetic YouTube Shorts script that:
+- Starts with the signature line: "Good morning".
+- Sounds like a Indian retail trader helping a fellow trader prep for the day — in simple, conversational Hinglish.
+- Focuses only on relevant Indian market updates — NIFTY, SENSEX, BANK NIFTY, and any important macro news affecting the market.
+- Filters out irrelevant or incomplete stock data and skips vague or non-actionable stock lists.
+- Avoids robotic tone, filler words, hype, or hard Hindi words. All numbers should be in English.
+- Avoid terms like “dosto”, “upar-niche”, or overly technical jargon.
+- Keeps the script natural and casual.
+- Ends with: a call to like, share, and subscribe for daily reports, and a question to spark engagement in the comments.
+
+Respond only with the final script.
+"""
+
 
     response = client.chat.completions.create(
         model="gpt-4",
