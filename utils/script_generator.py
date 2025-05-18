@@ -27,7 +27,7 @@ Respond with only the final script.
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are a professional content creator for Indian financial YouTube Shorts. Your tone is mostly English with simple, relatable Hindi — no slang or poetic Hindi. Your goal is to sound human, helpful, and relevant."},
+            {"role": "system", "content": "You are a professional content creator for Indian financial YouTube . Your tone is mostly HINglish with simple, relatable Hindi — no slang or poetic Hindi. Your goal is to sound human, helpful, and relevant."},
             {"role": "user", "content": prompt}
         ],
         temperature=0.8
