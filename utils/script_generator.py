@@ -10,7 +10,7 @@ You are a financial content creator writing for Indian retail traders. Based on 
 \"\"\"{report_text}\"\"\"
 
 Write a short, clear, human-sounding YouTube Shorts script that:
-- Start with signature line, "Good morning, Let’s gear up for the day under minutes". as it is. 
+- Start with signature line, "Good morning". as it is. 
 - Includes only relevant and helpful info for a trader, about Indian market updates (NIFTY/SENSEX/BANK NIFTY if available).
 - See if out of any news can have impact on stock market, which is not related to stocks. 
 - Sounds like a human is speaking (not robotic)
