@@ -16,7 +16,7 @@ Write a short, clear, human-sounding YouTube Shorts script that:
 - Sounds like a human is speaking (not robotic)
 - Skips news or stocks which has unavailable stock data about companies only.
 - Avoid news like these 4 or 5 stock are above or below this level.
-- Avoids overloading with too many numbers.
+- Avoids overloading with too many numbers, and very important don't use words like, "dosto", "niche", "par".
 - Uses simple, conversational Hinglish, use words like up, down, percentage.
 - Request to like, share, and subscribe for daily report and ask for something engaging in comments. 
 
