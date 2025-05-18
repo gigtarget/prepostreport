@@ -3,6 +3,7 @@ import time
 import requests
 from dotenv import load_dotenv
 
+
 from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
 from utils.image_templates import create_combined_market_image
 from utils.script_generator import generate_youtube_script_from_report as generate_script_from_report
