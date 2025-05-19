@@ -160,7 +160,6 @@ def main():
         combined_text = "\n".join(["\t".join(row) for row in table_rows]) + "\n\n" + news_report
         script_text = generate_script_from_report(combined_text)
 
-        # ✅ Save the script for subtitle use
         with open("output/generated_script.txt", "w", encoding="utf-8") as f:
             f.write(script_text)
 
@@ -179,10 +178,18 @@ def main():
 
     while True:
         video_path = generate_video()
+
         if video_path and os.path.exists(video_path):
             send_telegram_file(video_path, "✅ Final Video")
         else:
             send_telegram_message("❌ Video generation failed. Retrying...")
+
+            # 🔍 Debug details
+            if not video_path:
+                send_telegram_message("📛 video_path returned as None from generate_video().")
+            elif not os.path.exists(video_path):
+                send_telegram_message(f"📛 File not found at: {video_path}")
+
         if wait_for_telegram_reply("🎬 Happy with this video? Reply 'yes' to finish or 'no' to regenerate video."):
             break
 
