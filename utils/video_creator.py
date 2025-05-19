@@ -1,70 +1,59 @@
 import os
-import textwrap
 from PIL import Image
-from moviepy.editor import (
-    ImageClip,
-    AudioFileClip,
-    TextClip,
-    CompositeVideoClip
-)
-
-def generate_subtitle_clips(script_text, duration, video_width, video_height, font_size=32, font_color='white'):
-    lines = textwrap.wrap(script_text, width=60)
-    per_line_duration = duration / len(lines)
-
-    subtitle_clips = []
-    for i, line in enumerate(lines):
-        start_time = i * per_line_duration
-        end_time = (i + 1) * per_line_duration
-
-        txt_clip = (
-            TextClip(line, fontsize=font_size, color=font_color, font='Arial-Bold', method='caption', size=(video_width - 100, None))
-            .set_position(('center', video_height - 100))  # Position above bottom
-            .set_duration(per_line_duration)
-            .set_start(start_time)
-        )
-        subtitle_clips.append(txt_clip)
-
-    return subtitle_clips
+import ffmpeg
 
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
 
+    # Step 1: Use the new single image
     image_path = "output/final_image.png"
-    audio_path = "output/output_polly.mp3"
-    script_path = "output/generated_script.txt"
-
     if not os.path.exists(image_path):
         print("❌ final_image.png not found.")
         return None
+
+    # Step 2: Convert to .jpg with max quality
+    img = Image.open(image_path).convert("RGB")
+    frame_path = "output/frame_000.jpg"
+    img.save(frame_path, quality=100)  # MAX QUALITY
+
+    # Step 3: Confirm audio exists
+    audio_path = "output/output_polly.mp3"
     if not os.path.exists(audio_path):
         print("❌ Audio file not found.")
         return None
-    if not os.path.exists(script_path):
-        print("❌ Script file not found.")
+
+    # Step 4: Get audio duration
+    try:
+        probe = ffmpeg.probe(audio_path)
+        audio_duration = float(probe["format"]["duration"])
+    except Exception as e:
+        print(f"❌ Failed to probe audio duration: {e}")
         return None
 
+    frame_duration = audio_duration  # Only one frame shown for entire duration
+
+    # Step 5: Combine frame and audio into video
     try:
-        audio_clip = AudioFileClip(audio_path)
-        duration = audio_clip.duration
+        video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1 / frame_duration)
+        audio_input = ffmpeg.input(audio_path)
 
-        img = Image.open(image_path).convert("RGB")
-        width, height = img.size
+        (
+            ffmpeg
+            .output(
+                video_input, audio_input, output_video,
+                vcodec="libx264",
+                acodec="aac",
+                crf=18,              # Lower = better quality (0–51, recommended: 18–23)
+                preset="slow",       # Better compression and quality
+                pix_fmt="yuv420p",
+                shortest=None
+            )
+            .run(overwrite_output=True)
+        )
 
-        image_clip = ImageClip(image_path).set_duration(duration).set_audio(audio_clip)
-
-        with open(script_path, "r", encoding="utf-8") as f:
-            subtitle_text = f.read().strip().replace("'", "").replace('"', '')
-
-        subtitle_clips = generate_subtitle_clips(subtitle_text, duration, width, height)
-
-        final = CompositeVideoClip([image_clip] + subtitle_clips)
-        final.write_videofile(output_video, fps=24, codec="libx264", audio_codec="aac")
-
-        print(f"✅ Final video saved: {output_video}")
+        print(f"✅ Final video saved to: {output_video}")
         return output_video
 
-    except Exception as e:
-        print("❌ MoviePy failed:")
-        print(str(e))
+    except ffmpeg.Error as e:
+        print(f"❌ FFmpeg failed:\n{e.stderr.decode()}")
         return None
