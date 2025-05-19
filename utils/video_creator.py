@@ -24,7 +24,7 @@ def generate_srt_from_script(script_text, duration, output_path="output/subtitle
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
 
-    # Load the image
+    # Step 1: Check image
     image_path = "output/final_image.png"
     if not os.path.exists(image_path):
         print("❌ final_image.png not found.")
@@ -32,36 +32,37 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
 
     img = Image.open(image_path).convert("RGB")
 
-    # Confirm audio exists
+    # Step 2: Check audio
     audio_path = "output/output_polly.mp3"
     if not os.path.exists(audio_path):
         print("❌ Audio file not found.")
         return None
 
-    # Get audio duration
+    # Step 3: Get duration
     try:
         probe = ffmpeg.probe(audio_path)
         audio_duration = float(probe["format"]["duration"])
+        print(f"🔎 Audio duration: {audio_duration} seconds")
     except Exception as e:
         print(f"❌ Failed to probe audio duration: {e}")
         return None
 
-    # Load subtitle script
+    # Step 4: Load script
     subtitle_path = "output/generated_script.txt"
     subtitle_text = "Good morning guys. Let’s get you ready for aaj ka market session."
     if os.path.exists(subtitle_path):
         with open(subtitle_path, "r", encoding="utf-8") as f:
             subtitle_text = f.read().strip().replace("'", "").replace('"', '')
 
-    # Generate .srt subtitles
     srt_file = generate_srt_from_script(subtitle_text, audio_duration)
 
-    # Generate 1 frame per second
+    # Step 5: Create repeated frames
     frame_count = int(audio_duration)
     for i in range(frame_count):
         frame_path = f"output/frame_{i:03d}.jpg"
         img.save(frame_path, quality=100)
 
+    # Step 6: Feed into FFmpeg
     video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1)
     audio_input = ffmpeg.input(audio_path)
 
@@ -82,7 +83,8 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
             )
             .run(overwrite_output=True, capture_stdout=True, capture_stderr=True)
         )
-        print(f"✅ Final video with synced subtitles saved to: {output_video}")
+
+        print(f"✅ Final video saved: {output_video}")
         return output_video
 
     except ffmpeg.Error as e:
