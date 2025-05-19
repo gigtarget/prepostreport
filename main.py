@@ -160,7 +160,7 @@ def main():
         send_telegram_message("❌ Failed to create market image.")
         return
 
-    # ✅ Remove blank rows and duplicate header for Instagram version
+    # ✅ Remove blank rows and second header for Instagram version
     table_rows_cleaned = [
         row for i, row in enumerate(table_rows)
         if any(cell.strip() for cell in row) and not (i != 0 and row == ["Index", "Price", "Change", "%Change", "Sentiment"])
@@ -198,10 +198,42 @@ def main():
         if video_path and os.path.exists(video_path):
             send_telegram_file(video_path, "✅ Final Video")
 
-            # ✅ Send second Instagram video version
             insta_video_path = "output/insta_video.mp4"
             if os.path.exists(insta_video_path):
                 send_telegram_file(insta_video_path, "✅ Instagram Video Version")
+
+            # ✅ Generate YouTube title + description
+            from datetime import datetime
+            import calendar
+
+            def get_ordinal_day(day: int):
+                return f"{day}{'th' if 11 <= day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')}"
+
+            try:
+                dt = datetime.strptime(date_text, "%d.%m.%Y")
+                long_date = f"{get_ordinal_day(dt.day)} {calendar.month_name[dt.month]} {dt.year}"
+            except Exception as e:
+                long_date = date_text  # fallback
+
+            youtube_title = f"Pre Market Report – {long_date} | Nifty, Sensex, Global Market News"
+            youtube_description = f"""Welcome to today's Pre Market Report!
+
+In this video:
+✅ Nifty 50 & Sensex performance  
+✅ Global Market   
+✅ Global market updates  
+✅ News headlines impacting the Indian stock market
+
+Stay ahead of the curve with our accurate and timely market updates. Ideal for retail traders, investors, and market enthusiasts.
+
+🔔 Subscribe for daily stock market reports.
+👍 Like | 💬 Comment | 📢 Share
+
+📅 Date: {date_text}
+📊 Report Type: Pre Market Report
+🌐 Language: English/Hinglish
+"""
+            send_telegram_message(f"🎥 *YouTube Video Details:*\n\n*Title:* {youtube_title}\n\n*Description:*\n{youtube_description}")
 
         else:
             send_telegram_message("❌ Video generation failed. Retrying...")
