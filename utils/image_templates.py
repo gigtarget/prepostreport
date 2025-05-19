@@ -169,8 +169,8 @@ def create_instagram_image(
 
     # Date
     date_font_size=80,
-    date_x=100,
-    date_y=160,
+    date_x=110,
+    date_y=180,
     date_color="black",
 
     # Table
@@ -182,7 +182,7 @@ def create_instagram_image(
     # News
     news_font_size=30,
     news_x=110,
-    news_y=860,
+    news_y=1050,
     news_line_spacing=12,
     news_color="black"
 ):
