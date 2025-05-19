@@ -176,11 +176,11 @@ def create_instagram_image(
     # Table
     table_font_size=32,
     table_start_x=110,
-    table_start_y=380,
+    table_start_y=400,
     table_line_height=46,
 
     # News
-    news_font_size=30,
+    news_font_size=32,
     news_x=110,
     news_y=1050,
     news_line_spacing=12,
