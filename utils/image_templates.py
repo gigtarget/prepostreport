@@ -159,3 +159,72 @@ def create_thumbnail_image(
     except Exception as e:
         print(f"❌ Error creating thumbnail image: {e}")
         return None
+
+def create_instagram_image(
+    date_text,
+    table_rows,
+    news_text,
+    template_path="templates/insta_image.jpg",
+    output_path="output/insta_image.jpg",
+
+    # Date
+    date_font_size=80,
+    date_x=80,
+    date_y=180,
+    date_color="black",
+
+    # Table
+    table_font_size=32,
+    table_start_x=100,
+    table_start_y=350,
+    table_line_height=46,
+
+    # News
+    news_font_size=30,
+    news_x=900,
+    news_y=160,
+    news_line_spacing=12,
+    news_color="black"
+):
+    try:
+        img = Image.open(template_path).convert("RGB")
+        draw = ImageDraw.Draw(img)
+        image_width, _ = img.size
+
+        date_font = ImageFont.truetype(FONT_PATH, date_font_size)
+        table_font = ImageFont.truetype(FONT_PATH, table_font_size)
+        news_font = ImageFont.truetype(FONT_PATH, news_font_size)
+
+        # Draw date
+        draw.text((date_x, date_y), date_text, font=date_font, fill=date_color)
+
+        # Draw index table
+        draw_index_table(draw, table_rows, table_font, table_start_x, table_start_y, table_line_height, fill="black")
+
+        # Draw news
+        draw_wrapped_text(
+            draw,
+            news_text,
+            news_font,
+            news_x,
+            news_y + news_font.size + 10,
+            max_width=image_width - news_x - 80,
+            line_spacing=news_line_spacing,
+            fill=news_color
+        )
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        if output_path.lower().endswith(".jpg") or output_path.lower().endswith(".jpeg"):
+            img.save(output_path, quality=95)
+        elif output_path.lower().endswith(".png"):
+            img.save(output_path, compress_level=0)
+        else:
+            img.save(output_path)
+
+        print(f"✅ Instagram image saved to: {output_path}")
+        return output_path
+
+    except Exception as e:
+        print(f"❌ Error creating Instagram image: {e}")
+        return None
