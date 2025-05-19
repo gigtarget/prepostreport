@@ -132,8 +132,8 @@ def create_thumbnail_image(
     template_path="templates/premarket_thumbnail.jpg",
     output_path="output/thumbnail_image.jpg",
     font_size=150,
-    date_x=200,
-    date_y=500,
+    date_x=150,
+    date_y=400,
     date_color="black"
 ):
     try:
