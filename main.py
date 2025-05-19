@@ -105,7 +105,11 @@ def main():
         f.write("locked")
 
     # ✅ Create Thumbnail First
-    create_thumbnail_image(get_current_date_ist())
+    date_text = get_current_date_ist()
+    thumbnail_path = create_thumbnail_image(date_text)
+    if thumbnail_path and os.path.exists(thumbnail_path):
+        send_telegram_file(thumbnail_path, "🖼️ Thumbnail Preview")
+
 
     indian_symbols = [
         ("^NSEI", "NIFTY 50"),
