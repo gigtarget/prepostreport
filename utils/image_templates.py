@@ -176,7 +176,7 @@ def create_instagram_image(
     # Table
     table_font_size=32,
     table_start_x=110,
-    table_start_y=400,
+    table_start_y=440,
     table_line_height=46,
 
     # News
