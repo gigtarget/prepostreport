@@ -159,6 +159,11 @@ def main():
     while True:
         combined_text = "\n".join(["\t".join(row) for row in table_rows]) + "\n\n" + news_report
         script_text = generate_script_from_report(combined_text)
+
+        # ✅ Save the script for subtitle use
+        with open("output/generated_script.txt", "w", encoding="utf-8") as f:
+            f.write(script_text)
+
         send_telegram_message(f"📝 Generated Script:\n\n{script_text}")
         if wait_for_telegram_reply("🤖 Proceed to generate audio? Reply 'yes' to continue or 'no' to regenerate script."):
             break
