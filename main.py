@@ -4,7 +4,7 @@ import requests
 from dotenv import load_dotenv
 
 from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
-from utils.image_templates import create_combined_market_image, create_thumbnail_image
+from utils.image_templates import create_combined_market_image, create_thumbnail_image, create_instagram_image
 from utils.script_generator import generate_youtube_script_from_report as generate_script_from_report
 from utils.audio_generator import generate_audio_with_polly as generate_audio
 from utils.video_creator import create_video_from_images_and_audio as generate_video
@@ -110,7 +110,6 @@ def main():
     if thumbnail_path and os.path.exists(thumbnail_path):
         send_telegram_file(thumbnail_path, "🖼️ Thumbnail Preview")
 
-
     indian_symbols = [
         ("^NSEI", "NIFTY 50"),
         ("^BSESN", "SENSEX"),
@@ -150,7 +149,7 @@ def main():
     news_report = "\n\n".join([f"• {item['title']}" for item in news_items])
 
     final_img = create_combined_market_image(
-        get_current_date_ist(),
+        date_text,
         table_rows,
         news_report
     )
@@ -159,6 +158,15 @@ def main():
     else:
         send_telegram_message("❌ Failed to create market image.")
         return
+
+    # ✅ Create Instagram Image after market report
+    insta_img = create_instagram_image(
+        date_text,
+        table_rows,
+        news_report
+    )
+    if insta_img and os.path.exists(insta_img):
+        send_telegram_file(insta_img, "🖼️ Instagram Layout Preview")
 
     with open(OFFSET_FILE, "w") as f:
         f.write("0")
