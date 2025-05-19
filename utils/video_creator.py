@@ -14,7 +14,7 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     # Step 2: Convert to .jpg with max quality
     img = Image.open(image_path).convert("RGB")
     frame_path = "output/frame_000.jpg"
-    img.save(frame_path, quality=100)  # MAX QUALITY
+    img.save(frame_path, quality=100)
 
     # Step 3: Confirm audio exists
     audio_path = "output/output_polly.mp3"
@@ -30,28 +30,48 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         print(f"❌ Failed to probe audio duration: {e}")
         return None
 
-    frame_duration = audio_duration  # Only one frame shown for entire duration
+    # Step 5: Load subtitles from file
+    subtitle_path = "output/generated_script.txt"
+    subtitle_text = "Good morning guys. Let’s get you ready for aaj ka market session."
+    if os.path.exists(subtitle_path):
+        with open(subtitle_path, "r", encoding="utf-8") as f:
+            subtitle_text = f.read().strip().replace("'", "").replace('"', '')
 
-    # Step 5: Combine frame and audio into video
+    # Step 6: Draw subtitles using FFmpeg drawtext
     try:
-        video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1 / frame_duration)
+        video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1 / audio_duration)
         audio_input = ffmpeg.input(audio_path)
+
+        # Subtitle styling
+        drawtext_filter = (
+            f"drawtext=text='{subtitle_text}':"
+            "fontcolor=white:"
+            "fontsize=40:"
+            "borderw=2:"
+            "bordercolor=black:"
+            "x=(w-text_w)/2:"
+            "y=h-th-100"
+        )
 
         (
             ffmpeg
             .output(
-                video_input, audio_input, output_video,
+                video_input.video.filter_("drawtext", text=subtitle_text, fontcolor='white',
+                                          fontsize=40, borderw=2, bordercolor='black',
+                                          x='(w-text_w)/2', y='h-th-100'),
+                audio_input,
+                output_video,
                 vcodec="libx264",
                 acodec="aac",
-                crf=18,              # Lower = better quality (0–51, recommended: 18–23)
-                preset="slow",       # Better compression and quality
+                crf=18,
+                preset="slow",
                 pix_fmt="yuv420p",
                 shortest=None
             )
             .run(overwrite_output=True)
         )
 
-        print(f"✅ Final video saved to: {output_video}")
+        print(f"✅ Final video with subtitles saved to: {output_video}")
         return output_video
 
     except ffmpeg.Error as e:
