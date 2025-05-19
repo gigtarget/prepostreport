@@ -160,11 +160,11 @@ def main():
         send_telegram_message("❌ Failed to create market image.")
         return
 
-    # ✅ Remove blank rows for Instagram version
+    # ✅ Remove blank rows and duplicate header for Instagram version
     table_rows_cleaned = [
         row for i, row in enumerate(table_rows)
         if any(cell.strip() for cell in row) and not (i != 0 and row == ["Index", "Price", "Change", "%Change", "Sentiment"])
-]
+    ]
 
     insta_img = create_instagram_image(
         date_text,
@@ -197,6 +197,12 @@ def main():
         video_path = generate_video()
         if video_path and os.path.exists(video_path):
             send_telegram_file(video_path, "✅ Final Video")
+
+            # ✅ Send second Instagram video version
+            insta_video_path = "output/insta_video.mp4"
+            if os.path.exists(insta_video_path):
+                send_telegram_file(insta_video_path, "✅ Instagram Video Version")
+
         else:
             send_telegram_message("❌ Video generation failed. Retrying...")
         if wait_for_telegram_reply("🎬 Happy with this video? Reply 'yes' to finish or 'no' to regenerate video."):
