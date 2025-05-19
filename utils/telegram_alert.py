@@ -34,15 +34,9 @@ def send_telegram_file(filepath, caption=None):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/send{file_field.capitalize()}"
     with open(filepath, "rb") as f:
         files = {file_field: f}
-        data = {
-            "chat_id": CHAT_ID,
-            "caption": caption or "",
-        }
-
-        # For video, allow streaming
-        if file_field == "video":
-            data["supports_streaming"] = True
-
+        data = {"chat_id": CHAT_ID}
+        if caption:
+            data["caption"] = caption
         try:
             r = requests.post(url, data=data, files=files)
             r.raise_for_status()
