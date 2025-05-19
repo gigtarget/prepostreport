@@ -161,7 +161,10 @@ def main():
         return
 
     # ✅ Remove blank rows for Instagram version
-    table_rows_cleaned = [row for row in table_rows if any(cell.strip() for cell in row)]
+    table_rows_cleaned = [
+        row for i, row in enumerate(table_rows)
+        if any(cell.strip() for cell in row) and not (i != 0 and row == ["Index", "Price", "Change", "%Change", "Sentiment"])
+]
 
     insta_img = create_instagram_image(
         date_text,
