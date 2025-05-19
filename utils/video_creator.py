@@ -1,93 +1,70 @@
 import os
-from PIL import Image
-import ffmpeg
 import textwrap
+from PIL import Image
+from moviepy.editor import (
+    ImageClip,
+    AudioFileClip,
+    TextClip,
+    CompositeVideoClip
+)
 
-def format_time(seconds):
-    m, s = divmod(seconds, 60)
-    h, m = divmod(m, 60)
-    ms = int((seconds - int(seconds)) * 1000)
-    return f"{int(h):02}:{int(m):02}:{int(s):02},{ms:03}"
-
-def generate_srt_from_script(script_text, duration, output_path="output/subtitles.srt"):
+def generate_subtitle_clips(script_text, duration, video_width, video_height, font_size=32, font_color='white'):
     lines = textwrap.wrap(script_text, width=60)
     per_line_duration = duration / len(lines)
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        for i, line in enumerate(lines):
-            start_time = format_time(i * per_line_duration)
-            end_time = format_time((i + 1) * per_line_duration)
-            f.write(f"{i+1}\n{start_time} --> {end_time}\n{line}\n\n")
+    subtitle_clips = []
+    for i, line in enumerate(lines):
+        start_time = i * per_line_duration
+        end_time = (i + 1) * per_line_duration
 
-    return output_path
+        txt_clip = (
+            TextClip(line, fontsize=font_size, color=font_color, font='Arial-Bold', method='caption', size=(video_width - 100, None))
+            .set_position(('center', video_height - 100))  # Position above bottom
+            .set_duration(per_line_duration)
+            .set_start(start_time)
+        )
+        subtitle_clips.append(txt_clip)
+
+    return subtitle_clips
 
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
 
     image_path = "output/final_image.png"
+    audio_path = "output/output_polly.mp3"
+    script_path = "output/generated_script.txt"
+
     if not os.path.exists(image_path):
         print("❌ final_image.png not found.")
         return None
-
-    img = Image.open(image_path).convert("RGB")
-
-    audio_path = "output/output_polly.mp3"
     if not os.path.exists(audio_path):
         print("❌ Audio file not found.")
         return None
-
-    try:
-        probe = ffmpeg.probe(audio_path)
-        audio_duration = float(probe["format"]["duration"])
-        print(f"🔎 Audio duration: {audio_duration} seconds")
-    except Exception as e:
-        print(f"❌ Failed to probe audio duration: {e}")
+    if not os.path.exists(script_path):
+        print("❌ Script file not found.")
         return None
 
-    subtitle_path = "output/generated_script.txt"
-    subtitle_text = "Good morning guys. Let’s get you ready for aaj ka market session."
-    if os.path.exists(subtitle_path):
-        with open(subtitle_path, "r", encoding="utf-8") as f:
+    try:
+        audio_clip = AudioFileClip(audio_path)
+        duration = audio_clip.duration
+
+        img = Image.open(image_path).convert("RGB")
+        width, height = img.size
+
+        image_clip = ImageClip(image_path).set_duration(duration).set_audio(audio_clip)
+
+        with open(script_path, "r", encoding="utf-8") as f:
             subtitle_text = f.read().strip().replace("'", "").replace('"', '')
 
-    srt_file = generate_srt_from_script(subtitle_text, audio_duration)
+        subtitle_clips = generate_subtitle_clips(subtitle_text, duration, width, height)
 
-    frame_count = int(audio_duration)
-    for i in range(frame_count):
-        frame_path = f"output/frame_{i:03d}.jpg"
-        img.save(frame_path, quality=100)
+        final = CompositeVideoClip([image_clip] + subtitle_clips)
+        final.write_videofile(output_video, fps=24, codec="libx264", audio_codec="aac")
 
-    video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1)
-    audio_input = ffmpeg.input(audio_path)
-
-    try:
-        (
-            ffmpeg
-            .output(
-                video_input,
-                audio_input,
-                output_video,
-                vf=f"subtitles={srt_file}:force_style='FontSize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H0&,BorderStyle=1,Outline=1'",
-                vcodec="libx264",
-                acodec="aac",
-                crf=18,
-                preset="slow",
-                pix_fmt="yuv420p",
-                shortest=None
-            )
-            .run(overwrite_output=True, capture_stdout=True, capture_stderr=True)
-        )
-
-        print("✅ Final video created successfully.")
-        print("🟢 Returning output path:", output_video)
+        print(f"✅ Final video saved: {output_video}")
         return output_video
 
-    except ffmpeg.Error as e:
-        print("❌ FFmpeg exception occurred!")
-        print("----- ERROR START -----")
-        try:
-            print(e.stderr.decode())
-        except Exception:
-            print(str(e))
-        print("------ ERROR END ------")
+    except Exception as e:
+        print("❌ MoviePy failed:")
+        print(str(e))
         return None
