@@ -126,3 +126,36 @@ def create_combined_market_image(
     except Exception as e:
         print(f"❌ Error creating combined image: {e}")
         return None
+
+def create_thumbnail_image(
+    date_text,
+    template_path="templates/premarket_thumbnail.jpg",
+    output_path="output/thumbnail_image.jpg",
+    font_size=80,
+    date_x=100,
+    date_y=100,
+    date_color="black"
+):
+    try:
+        img = Image.open(template_path).convert("RGB")
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype(FONT_PATH, font_size)
+
+        # Draw the date
+        draw.text((date_x, date_y), date_text, font=font, fill=date_color)
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        if output_path.lower().endswith(".jpg") or output_path.lower().endswith(".jpeg"):
+            img.save(output_path, quality=95)
+        elif output_path.lower().endswith(".png"):
+            img.save(output_path, compress_level=0)
+        else:
+            img.save(output_path)  # Fallback
+
+        print(f"✅ Thumbnail image saved to: {output_path}")
+        return output_path
+
+    except Exception as e:
+        print(f"❌ Error creating thumbnail image: {e}")
+        return None
