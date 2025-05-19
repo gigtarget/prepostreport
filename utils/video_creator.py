@@ -1,6 +1,25 @@
 import os
 from PIL import Image
 import ffmpeg
+import textwrap
+
+def format_time(seconds):
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    ms = int((seconds - int(seconds)) * 1000)
+    return f"{int(h):02}:{int(m):02}:{int(s):02},{ms:03}"
+
+def generate_srt_from_script(script_text, duration, output_path="output/subtitles.srt"):
+    lines = textwrap.wrap(script_text, width=60)
+    per_line_duration = duration / len(lines)
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        for i, line in enumerate(lines):
+            start_time = format_time(i * per_line_duration)
+            end_time = format_time((i + 1) * per_line_duration)
+            f.write(f"{i+1}\n{start_time} --> {end_time}\n{line}\n\n")
+
+    return output_path
 
 def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
     os.makedirs("output", exist_ok=True)
@@ -30,37 +49,24 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
         print(f"❌ Failed to probe audio duration: {e}")
         return None
 
-    # Step 5: Load subtitles from file
+    # Step 5: Load script and generate subtitles
     subtitle_path = "output/generated_script.txt"
     subtitle_text = "Good morning guys. Let’s get you ready for aaj ka market session."
     if os.path.exists(subtitle_path):
         with open(subtitle_path, "r", encoding="utf-8") as f:
             subtitle_text = f.read().strip().replace("'", "").replace('"', '')
 
-    # Step 6: Draw subtitles using FFmpeg drawtext
+    srt_file = generate_srt_from_script(subtitle_text, audio_duration)
+
+    # Step 6: Combine everything with subtitles
     try:
-        video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1 / audio_duration)
-        audio_input = ffmpeg.input(audio_path)
-
-        # Subtitle styling
-        drawtext_filter = (
-            f"drawtext=text='{subtitle_text}':"
-            "fontcolor=white:"
-            "fontsize=40:"
-            "borderw=2:"
-            "bordercolor=black:"
-            "x=(w-text_w)/2:"
-            "y=h-th-100"
-        )
-
         (
             ffmpeg
+            .input("output/frame_%03d.jpg", framerate=1 / audio_duration)
             .output(
-                video_input.video.filter_("drawtext", text=subtitle_text, fontcolor='white',
-                                          fontsize=40, borderw=2, bordercolor='black',
-                                          x='(w-text_w)/2', y='h-th-100'),
-                audio_input,
+                audio_path,
                 output_video,
+                vf=f"subtitles={srt_file}:force_style='FontSize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H0&,BorderStyle=1,Outline=1'",
                 vcodec="libx264",
                 acodec="aac",
                 crf=18,
@@ -71,7 +77,7 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
             .run(overwrite_output=True)
         )
 
-        print(f"✅ Final video with subtitles saved to: {output_video}")
+        print(f"✅ Final video with synced subtitles saved to: {output_video}")
         return output_video
 
     except ffmpeg.Error as e:
