@@ -134,6 +134,7 @@ def main():
             if row:
                 table_rows.append(row)
 
+    # Spacer rows for market report image only
     table_rows.append(["", "", "", "", ""])
     table_rows.append(["", "", "", "", ""])
     table_rows.append(["", "", "", "", ""])
@@ -159,10 +160,12 @@ def main():
         send_telegram_message("❌ Failed to create market image.")
         return
 
-    # ✅ Create Instagram Image after market report
+    # ✅ Remove blank rows for Instagram version
+    table_rows_cleaned = [row for row in table_rows if any(cell.strip() for cell in row)]
+
     insta_img = create_instagram_image(
         date_text,
-        table_rows,
+        table_rows_cleaned,
         news_report
     )
     if insta_img and os.path.exists(insta_img):
