@@ -4,7 +4,7 @@ import requests
 from dotenv import load_dotenv
 
 from utils.fetch_data import get_yahoo_price_with_change, get_et_market_articles
-from utils.image_templates import create_combined_market_image
+from utils.image_templates import create_combined_market_image, create_thumbnail_image
 from utils.script_generator import generate_youtube_script_from_report as generate_script_from_report
 from utils.audio_generator import generate_audio_with_polly as generate_audio
 from utils.video_creator import create_video_from_images_and_audio as generate_video
@@ -93,7 +93,7 @@ def format_table_row(label, price, change_pts, change_pct):
         formatted_change_pts = f"{int(change_pts):+}"
         formatted_change_pct = f"{float(change_pct):+.2f}%"
     except (ValueError, TypeError):
-        return None  # Skip this row if any value is invalid
+        return None
     return [label, formatted_price, formatted_change_pts, formatted_change_pct, sentiment]
 
 def main():
@@ -103,6 +103,9 @@ def main():
     os.makedirs("output", exist_ok=True)
     with open(LOCK_FILE, "w") as f:
         f.write("locked")
+
+    # ✅ Create Thumbnail First
+    create_thumbnail_image(get_current_date_ist())
 
     indian_symbols = [
         ("^NSEI", "NIFTY 50"),
