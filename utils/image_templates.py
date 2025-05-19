@@ -169,20 +169,20 @@ def create_instagram_image(
 
     # Date
     date_font_size=80,
-    date_x=80,
-    date_y=180,
+    date_x=100,
+    date_y=160,
     date_color="black",
 
     # Table
     table_font_size=32,
-    table_start_x=100,
+    table_start_x=110,
     table_start_y=350,
     table_line_height=46,
 
     # News
     news_font_size=30,
-    news_x=900,
-    news_y=160,
+    news_x=110,
+    news_y=860,
     news_line_spacing=12,
     news_color="black"
 ):
