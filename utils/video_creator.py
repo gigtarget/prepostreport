@@ -58,13 +58,17 @@ def create_video_from_images_and_audio(output_video="output/final_video.mp4"):
 
     srt_file = generate_srt_from_script(subtitle_text, audio_duration)
 
-    # Step 6: Combine everything with subtitles
+    # Step 6: Prepare FFmpeg inputs
+    video_input = ffmpeg.input("output/frame_%03d.jpg", framerate=1 / audio_duration)
+    audio_input = ffmpeg.input(audio_path)
+
+    # Step 7: Combine everything with subtitles
     try:
         (
             ffmpeg
-            .input("output/frame_%03d.jpg", framerate=1 / audio_duration)
             .output(
-                audio_path,
+                video_input,
+                audio_input,
                 output_video,
                 vf=f"subtitles={srt_file}:force_style='FontSize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H0&,BorderStyle=1,Outline=1'",
                 vcodec="libx264",
