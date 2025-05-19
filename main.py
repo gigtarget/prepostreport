@@ -9,7 +9,6 @@ from utils.script_generator import generate_youtube_script_from_report as genera
 from utils.audio_generator import generate_audio_with_polly as generate_audio
 from utils.video_creator import create_video_from_images_and_audio as generate_video
 from utils.telegram_alert import send_telegram_message, send_telegram_file
-from utils.uploader import upload_video_railway  # <-- Added for YouTube
 
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -87,16 +86,15 @@ def classify_sentiment(change):
     else:
         return "Neutral"
 
-
 def format_table_row(label, price, change_pts, change_pct):
-    sentiment = classify_sentiment(change_pct)
-    return [
-        label,
-        f"{int(price):,}",                     # Price: integer only
-        f"{int(change_pts):+}",                # Change: integer only
-        f"{change_pct:+.2f}%",                 # %Change: keep 2 decimal places
-        sentiment
-    ]
+    try:
+        sentiment = classify_sentiment(change_pct)
+        formatted_price = f"{int(price):,}"
+        formatted_change_pts = f"{int(change_pts):+}"
+        formatted_change_pct = f"{float(change_pct):+.2f}%"
+    except (ValueError, TypeError):
+        return None  # Skip this row if any value is invalid
+    return [label, formatted_price, formatted_change_pts, formatted_change_pct, sentiment]
 
 def main():
     if os.path.exists(LOCK_FILE):
@@ -106,7 +104,6 @@ def main():
     with open(LOCK_FILE, "w") as f:
         f.write("locked")
 
-    # ------------------- Index Data -------------------
     indian_symbols = [
         ("^NSEI", "NIFTY 50"),
         ("^BSESN", "SENSEX"),
@@ -122,28 +119,29 @@ def main():
     indian_data = [get_yahoo_price_with_change(sym, lbl) for sym, lbl in indian_symbols]
     global_data = [get_yahoo_price_with_change(sym, lbl) for sym, lbl in global_symbols]
 
-    # ------------------- Table Structure -------------------
     table_rows = []
     table_rows.append(["Index", "Price", "Change", "%Change", "Sentiment"])
 
     for item in indian_data:
         if item:
-            table_rows.append(format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"]))
+            row = format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"])
+            if row:
+                table_rows.append(row)
 
-    table_rows.append(["", "", "", "", ""])  # spacer
-    table_rows.append(["", "", "", "", ""])  # spacer
-    table_rows.append(["", "", "", "", ""])  # spacer
+    table_rows.append(["", "", "", "", ""])
+    table_rows.append(["", "", "", "", ""])
+    table_rows.append(["", "", "", "", ""])
     table_rows.append(["Index", "Price", "Change", "%Change", "Sentiment"])
 
     for item in global_data:
         if item:
-            table_rows.append(format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"]))
+            row = format_table_row(item["label"], item["price"], item["change_pts"], item["change_pct"])
+            if row:
+                table_rows.append(row)
 
-    # ------------------- News -------------------
     news_items = get_et_market_articles(limit=5)
     news_report = "\n\n".join([f"• {item['title']}" for item in news_items])
 
-    # ------------------- Create Image -------------------
     final_img = create_combined_market_image(
         get_current_date_ist(),
         table_rows,
@@ -155,7 +153,6 @@ def main():
         send_telegram_message("❌ Failed to create market image.")
         return
 
-    # ------------------- Script -------------------
     with open(OFFSET_FILE, "w") as f:
         f.write("0")
 
@@ -166,7 +163,6 @@ def main():
         if wait_for_telegram_reply("🤖 Proceed to generate audio? Reply 'yes' to continue or 'no' to regenerate script."):
             break
 
-    # ------------------- Audio -------------------
     while True:
         audio_path = generate_audio(script_text)
         if audio_path and os.path.exists(audio_path):
@@ -176,7 +172,6 @@ def main():
         if wait_for_telegram_reply("▶️ Proceed to generate video? Reply 'yes' to continue or 'no' to regenerate audio."):
             break
 
-    # ------------------- Video -------------------
     while True:
         video_path = generate_video()
         if video_path and os.path.exists(video_path):
@@ -184,14 +179,6 @@ def main():
         else:
             send_telegram_message("❌ Video generation failed. Retrying...")
         if wait_for_telegram_reply("🎬 Happy with this video? Reply 'yes' to finish or 'no' to regenerate video."):
-            # ✅ Upload to YouTube
-            upload_video_railway(
-                video_path=video_path,
-                title=f"📈 Indian Stock Market Premarket Report – {get_current_date_ist()}",
-                description="Highlights from NIFTY, SENSEX, global markets, and market sentiment. Stay informed before the bell rings!",
-                tags=["Indian Stock Market", "Nifty", "Premarket", "BSE", "Sensex"],
-                privacy="public"
-            )
             break
 
 if __name__ == "__main__":
